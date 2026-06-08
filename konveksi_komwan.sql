@@ -231,28 +231,7 @@ INSERT INTO `pelanggan` (`ID_PELANGGAN`, `NAMA_PELANGGAN`, `ALAMAT_PELANGGAN`, `
 
 --
 -- Triggers `pelanggan`
---
-DELIMITER $$
-CREATE TRIGGER `log_delete_pelanggan` AFTER DELETE ON `pelanggan` FOR EACH ROW BEGIN
-    INSERT INTO audit_log (nama_tabel, aksi, keterangan, waktu, user_pelaksana)
-    VALUES ('pelanggan', 'DELETE', CONCAT('Menghapus pelanggan: ', OLD.NAMA_PELANGGAN), NOW(), USER());
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `log_insert_pelanggan` AFTER INSERT ON `pelanggan` FOR EACH ROW BEGIN
-    INSERT INTO audit_log (nama_tabel, aksi, keterangan, waktu, user_pelaksana)
-    VALUES ('pelanggan', 'INSERT', CONCAT('Menambahkan pelanggan baru: ', NEW.NAMA_PELANGGAN), NOW(), USER());
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `log_update_pelanggan` AFTER UPDATE ON `pelanggan` FOR EACH ROW BEGIN
-    INSERT INTO audit_log (nama_tabel, aksi, keterangan, waktu, user_pelaksana)
-    VALUES ('pelanggan', 'UPDATE', CONCAT('Mengubah data pelanggan ID: ', OLD.ID_PELANGGAN), NOW(), USER());
-END
-$$
-DELIMITER ;
+
 
 -- --------------------------------------------------------
 
