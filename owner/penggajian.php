@@ -597,9 +597,9 @@ body::before {
                 $ada_komplain = ($d['STATUS_KOMPLAIN'] ?? '') == 'Menunggu';
                 // Ringkasan deadline untuk stat card
                 $lewat_deadline = mysqli_fetch_assoc(mysqli_query($koneksi,
-                    "SELECT COUNT(*) as t FROM produksi
-                    WHERE DEADLINE IS NOT NULL AND DEADLINE != ''
-                    AND TANGGAL_SELESAI IS NULL AND DEADLINE < CURDATE()"))['t'] ?? 0;
+                "SELECT COUNT(*) as t FROM produksi
+                WHERE DEADLINE IS NOT NULL
+                AND TANGGAL_SELESAI IS NULL AND DEADLINE < CURDATE()"))['t'] ?? 0;
                 // ── Kalkulasi Bonus / Penalti ──
                 $gaji_pokok   = $d['JUMLAH_DIPRODUKSI'] * $d['UPAH_PER_UNIT'];
                 $bonus_hitung = 0;
