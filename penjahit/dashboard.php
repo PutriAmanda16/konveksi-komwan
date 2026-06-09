@@ -7,10 +7,6 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'penjahit') {
     exit;
 }
 
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS CATATAN_KOMPLAIN TEXT NULL");
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS TANGGAL_KOMPLAIN DATETIME NULL");
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS STATUS_KOMPLAIN VARCHAR(30) NULL DEFAULT 'Belum'");
-
 $id_penjahit   = $_SESSION['id'];
 $nama_penjahit = $_SESSION['user'];
 
