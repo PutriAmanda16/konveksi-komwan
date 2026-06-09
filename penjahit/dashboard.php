@@ -481,7 +481,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <div style="display:flex;flex-wrap:wrap;gap:5px">
                         <!-- Update Progress -->
                         <button class="btn-aksi btn-update"
-                            onclick="bukaModalUpdate('<?= $row['ID_PRODUKSI'] ?>', '<?= $st_pengerjaan ?>', '<?= htmlspecialchars($row['KETERANGAN'] ?? '', ENT_QUOTES) ?>', '<?= $row['STATUS_KUALITAS'] ?? 'baik' ?>')"                            <i class="bi bi-pencil-square"></i> Update
+                         onclick="bukaModalUpdate('<?= $row['ID_PRODUKSI'] ?>', '<?= $st_pengerjaan ?>', '<?= htmlspecialchars($row['KETERANGAN'] ?? '', ENT_QUOTES) ?>', '<?= $row['STATUS_KUALITAS'] ?? 'baik' ?>')">
+                         <i class="bi bi-pencil-square"></i> Update
                         </button>
 
                         <?php if($ada_bukti && $status_terima != 'Diterima'): ?>
