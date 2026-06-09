@@ -15,5 +15,4 @@ if ($conn->connect_error) {
     // Jangan biarkan script mati total tanpa pesan, cek errornya
     die("Koneksi gagal: " . $conn->connect_error);
 }
-echo "Koneksi sukses!";
 ?>
