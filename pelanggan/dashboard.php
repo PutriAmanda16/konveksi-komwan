@@ -384,9 +384,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     $q_produk = mysqli_query($koneksi, "SELECT * FROM produk");
     while($prd = mysqli_fetch_assoc($q_produk)):
         $foto_file = "../uploads/produk/" . $prd['FOTO_PRODUK'];
-        $foto_url  = "/konveksi_komwan/uploads/produk/" . $prd['FOTO_PRODUK'];
+        $foto_url  = "/uploads/produk/" . ($prd['FOTO_PRODUK'] ?? '');
 
-        $ada_foto = !empty($prd['FOTO_PRODUK']) && file_exists($foto_file);
+        $ada_foto = !empty($prd['FOTO_PRODUK'] ?? '');
     ?>
     <div class="product-card">
         <div class="product-img">
