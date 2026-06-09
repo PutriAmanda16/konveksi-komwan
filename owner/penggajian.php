@@ -3,11 +3,6 @@ session_start();
 include "../config/koneksi.php";
 if (!isset($_SESSION['user']) || $_SESSION['role'] != 'owner') { header("Location: ../index.php"); exit; }
 
-// Pastikan kolom komplain sudah ada
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS CATATAN_KOMPLAIN TEXT NULL");
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS BUKTI_KOMPLAIN VARCHAR(255) NULL");
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS TANGGAL_KOMPLAIN DATETIME NULL");
-mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS STATUS_KOMPLAIN VARCHAR(30) NULL DEFAULT 'Belum'");
 
 // Proses Upload Bukti Bayar
 if(isset($_POST['bayar'])) {
