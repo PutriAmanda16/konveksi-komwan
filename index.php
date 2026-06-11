@@ -21,12 +21,21 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body {
     font-family:'Nunito',sans-serif;
-    min-height:100vh;
-    background:var(--bg);
-    display:flex;align-items:center;justify-content:center;
-    padding:24px 16px;
-    position:relative;overflow:auto;
-    color:var(--text);
+    min-height: 100vh;
+    background: var(--bg);
+    
+    /* SOLUSI TERBAIK UNTUK SCROLLING: */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    /* Berikan padding vertikal yang cukup agar saat di-scroll ke bawah tidak mepet */
+    padding: 40px 16px; 
+    
+    position: relative;
+    color: var(--text);
+    box-sizing: border-box;
 }
 
 /* Dot pattern */
