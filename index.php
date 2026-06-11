@@ -25,7 +25,7 @@ body {
     background:var(--bg);
     display:flex;align-items:center;justify-content:center;
     padding:24px 16px;
-    position:relative;overflow:hidden;
+    position:relative;overflow:auto;
     color:var(--text);
 }
 
