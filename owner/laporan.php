@@ -510,6 +510,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     </div>
 
     <!-- TAB: Aset -->
+    <!-- TAB: Aset -->
     <div class="tab-pane" id="tab-aset">
         <div class="tbl-card">
             <div class="tbl-hd">
@@ -523,16 +524,16 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 $qa = mysqli_query($koneksi, "SELECT * FROM aset ORDER BY ID_ASET ASC");
                 $cnt=0;
                 while ($a = mysqli_fetch_assoc($qa)): $cnt++;
-                    $k=$a['KONDISI_ASET']??'Baik';
-                    $kc=match($k){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
-                    $ki=match($k){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
+                    $k = $a['KONDISI'] ?? 'Baik'; // Menyesuaikan dengan kolom kondisi aset kamu
+                    $kc = match($k){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
+                    $ki = match($k){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
                 ?>
                 <tr>
                     <td><span class="id-tag blue"><?= htmlspecialchars($a['ID_ASET']) ?></span></td>
                     <td style="font-weight:700"><?= htmlspecialchars($a['NAMA_ASET']) ?></td>
-                    <td><span class="badge badge-b"><i class="bi bi-tag-fill"></i><?= htmlspecialchars($a['JENIS_ASET']) ?></span></td>
+                    <td><span class="badge badge-b"><i class="bi bi-tag-fill"></i> <?= htmlspecialchars($a['JENIS_ASET']) ?></span></td>
                     <td style="font-weight:700;color:var(--text)">Rp <?= number_format($a['NILAI_ASET']) ?></td>
-                    <td><span class="<?= $kc ?>"><i class="bi bi-<?= $ki ?>"></i><?= htmlspecialchars($k) ?></span></td>
+                    <td><span class="<?= $kc ?>"><i class="bi bi-<?= $ki ?>"></i> <?= htmlspecialchars($k) ?></span></td>
                 </tr>
                 <?php endwhile; if (!$cnt): ?><tr><td colspan="5"><div class="empty-cell"><i class="bi bi-building"></i>Belum ada data aset</div></td></tr><?php endif; ?>
                 </tbody>
@@ -556,17 +557,17 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                      JOIN aset a ON s.ID_ASET=a.ID_ASET ORDER BY s.TANGGAL_SERVIS DESC");
                 $cnt=0;
                 while ($s = mysqli_fetch_assoc($qs)): $cnt++;
-                    $ks=$s['KONDISI_SETELAH']??'Baik';
-                    $kc2=match($ks){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
-                    $ki2=match($ks){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
+                    $ks = $s['KONDISI_ASET'] ?? 'Baik';
+                    $kc2 = match($ks){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
+                    $ki2 = match($ks){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
                 ?>
                 <tr>
                     <td style="color:var(--text2)"><?= date('d/m/Y', strtotime($s['TANGGAL_SERVIS'])) ?></td>
                     <td style="font-weight:700"><?= htmlspecialchars($s['NAMA_ASET']) ?></td>
                     <td><span class="badge badge-b" style="font-size:11px"><?= htmlspecialchars($s['JENIS_ASET']) ?></span></td>
                     <td style="color:var(--text2);font-size:13px"><?= htmlspecialchars($s['KETERANGAN']) ?></td>
-                    <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($s['BIAYA_SERVIS']) ?></td>
-                    <td><span class="<?= $kc2 ?>"><i class="bi bi-<?= $ki2 ?>"></i><?= htmlspecialchars($ks) ?></span></td>
+                    <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($s['BIAYA']) ?></td>                    
+                    <td><span class="<?= $kc2 ?>"><i class="bi bi-<?= $ki2 ?>"></i> <?= htmlspecialchars($ks) ?></span></td>
                 </tr>
                 <?php endwhile; if (!$cnt): ?><tr><td colspan="6"><div class="empty-cell"><i class="bi bi-wrench"></i>Belum ada riwayat servis</div></td></tr><?php endif; ?>
                 </tbody>
