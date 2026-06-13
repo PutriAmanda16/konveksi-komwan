@@ -1,42 +1,42 @@
 <?php
-include '../koneksi.php';
 session_start();
+include "../config/koneksi.php";
 
-if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true || $_SESSION['role'] !== 'owner') {
-    echo "<script>alert('Anda harus login sebagai Owner terlebih dahulu!'); window.location.href='../login.php';</script>";
+if (!isset($_SESSION['user']) || $_SESSION['role'] != 'owner') {
+    header("Location: ../index.php");
     exit;
 }
 
-// Ambil data untuk ringkasan dari database
-$q_pesanan = mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) AS total FROM pesanan WHERE STATUS_PESANAN='Selesai'");
-$total_pesanan = mysqli_fetch_assoc($q_pesanan)['total'] ?? 0;
+// Sidebar helpers
+$nama_owner = $_SESSION['user'];
+$inisial     = strtoupper(substr($nama_owner, 0, 1));
+if (strpos($nama_owner, ' ') !== false) {
+    $parts   = explode(' ', $nama_owner);
+    $inisial = strtoupper(substr($parts[0],0,1).substr($parts[1],0,1));
+}
+$notif_bayar = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'"));
+$notif_chat  = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as t FROM chat_sesi WHERE STATUS='eskalasi'"))['t'] ?? 0;
+$aset_rusak = 0;
+$stok_kritis = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM bahan_baku WHERE JUMLAH_STOK <= 25"));
+$total_notif = $notif_bayar + $notif_chat + $stok_kritis + $aset_rusak;
 
-$q_bahan = mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) AS total FROM pembelian_bahan");
-$total_bahan = mysqli_fetch_assoc($q_bahan)['total'] ?? 0;
+// ══ KEUANGAN ══
+$omset            = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS_PESANAN='Selesai'"))['t'] ?? 0;
+$pengeluaran_bh   = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pembelian_bahan"))['t'] ?? 0;
+$pengeluaran_gj   = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian WHERE STATUS_BAYAR='Selesai'"))['t'] ?? 0;
+$biaya_servis     = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(BIAYA) as t FROM servis_aset"))['t'] ?? 0;
 
-$q_gaji = mysqli_query($koneksi, "SELECT SUM(JUMLAH_GAJI) AS total FROM penggajian WHERE STATUS_BAYAR='Selesai'");
-$total_gaji = mysqli_fetch_assoc($q_gaji)['total'] ?? 0;
-
-$q_aset = mysqli_query($koneksi, "SELECT SUM(NILAI_ASET) AS total FROM aset");
-$total_aset = mysqli_fetch_assoc($q_aset)['total'] ?? 0;
-
-$q_servis = mysqli_query($koneksi, "SELECT SUM(BIAYA) AS total FROM servis_aset");
-$biaya_servis = mysqli_fetch_assoc($q_servis)['total'] ?? 0;
-
-// Kalkulasi Keuangan
-$total_pemasukan = $total_pesanan;
-$total_pengeluaran = $total_bahan + $total_gaji + $biaya_servis;
-$saldo_bersih = $total_pemasukan - $total_pengeluaran;
+$total_pengeluaran = $pengeluaran_bh + $pengeluaran_gj + $biaya_servis;
+$keuntungan_bersih= $omset - $total_pengeluaran;
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Keuangan &amp; Aset - Konveksi Apps</title>
+    <title>Laporan Keuangan & Aset - Owner</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --p50: #fff0f6; --p100: #ffdeeb; --p200: #fcc2d7; --p500: #e64980; --p600: #d6336c; --p700: #c2255c;
@@ -47,31 +47,58 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
         
-        /* Layout */
-        .main-content { flex: 1; padding: 30px; max-width: 1400px; margin: 0 auto; width: 100%; }
+        /* Sidebar Styles */
+        .sidebar { width: 280px; background: var(--card-bg); border-right: 1.5px solid var(--border); display: flex; flex-direction: column; height: 100vh; position: fixed; left: 0; top: 0; z-index: 100; }
+        .sb-hd { padding: 24px; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; gap: 12px; }
+        .sb-logo { width: 40px; height: 40px; background: var(--p50); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--p500); border: 1.5px solid var(--p100); }
+        .sb-brand { font-weight: 800; font-size: 16px; color: var(--g900); letter-spacing: -0.5px; }
+        .sb-brand span { color: var(--p500); }
         
-        /* Header */
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .page-title h1 { font-size: 24px; font-weight: 800; color: var(--g900); }
-        .page-title p { color: var(--text2); font-size: 14px; margin-top: 4px; }
-        .print-btn { background: var(--p500); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; text-decoration: none; }
-        .print-btn:hover { background: var(--p600); transform: translateY(-1px); }
+        .sb-menu { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+        .sb-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; color: var(--g700); font-weight: 600; font-size: 14px; text-decoration: none; border-radius: 12px; transition: all 0.2s; }
+        .sb-item-left { display: flex; align-items: center; gap: 12px; }
+        .sb-item i { font-size: 18px; color: var(--g600); transition: all 0.2s; }
+        .sb-item:hover { background: var(--p50); color: var(--p500); }
+        .sb-item:hover i { color: var(--p500); }
+        .sb-item.active { background: var(--p500); color: white; }
+        .sb-item.active i { color: white; }
+        .sb-badge { background: var(--p50); color: var(--p500); padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid var(--p100); }
+        .sb-item.active .sb-badge { background: rgba(255,255,255,0.2); color: white; border-color: transparent; }
+        .sb-badge.red { background: #fff5f5; color: var(--r500); border-color: #ffe3e3; }
+        .sb-item.active .sb-badge.red { background: var(--r500); color: white; }
 
-        /* Summary Cards */
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 35px; }
+        .sb-ft { padding: 16px; border-top: 1.5px solid var(--border); background: var(--g50); }
+        .usr-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--border); }
+        .usr-av { width: 40px; height: 40px; background: var(--p500); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; box-shadow: 0 4px 10px rgba(230,73,128,0.2); }
+        .usr-info { flex: 1; min-width: 0; }
+        .usr-name { font-weight: 700; font-size: 13.5px; color: var(--g900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .usr-role { font-size: 11px; color: var(--text2); font-weight: 600; text-transform: uppercase; margin-top: 2px; }
+        .btn-lgt { color: var(--g600); border: none; background: none; padding: 8px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .btn-lgt:hover { color: var(--r500); background: #fff5f5; }
+
+        /* Layout & Main */
+        .main-content { flex: 1; padding: 40px; margin-left: 280px; max-width: calc(100% - 280px); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
+        .page-title h1 { font-size: 24px; font-weight: 800; color: var(--g900); letter-spacing: -0.5px; }
+        .page-title p { color: var(--text2); font-size: 14px; margin-top: 4px; font-weight: 500; }
+        .print-btn { background: var(--p500); color: white; border: none; padding: 12px 24px; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; text-decoration: none; box-shadow: 0 4px 12px rgba(230,73,128,0.15); }
+        .print-btn:hover { background: var(--p600); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(230,73,128,0.2); }
+
+        /* Summary Grid */
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 35px; }
         .s-card { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 24px; display: flex; align-items: center; gap: 20px; position: relative; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .s-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .s-icon.in { background: #ebfbee; color: var(--g500); }
         .s-icon.out { background: #fff5f5; color: var(--r500); }
         .s-icon.bal { background: var(--p50); color: var(--p500); }
         .s-info p { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
-        .s-info h3 { font-size: 24px; font-weight: 800; color: var(--g900); margin-top: 4px; }
+        .s-info h3 { font-size: 24px; font-weight: 800; color: var(--g900); margin-top: 4px; letter-spacing: -0.5px; }
 
         /* Navigation Tabs */
-        .tabs-nav { display: flex; gap: 10px; background: var(--card-bg); padding: 8px; border-radius: 16px; border: 1.5px solid var(--border); margin-bottom: 25px; overflow-x: auto; }
+        .tabs-nav { display: flex; gap: 8px; background: var(--card-bg); padding: 8px; border-radius: 16px; border: 1.5px solid var(--border); margin-bottom: 25px; overflow-x: auto; }
         .tab-btn { padding: 12px 20px; border: none; background: none; font-size: 14px; font-weight: 700; color: var(--text2); border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap; }
         .tab-btn:hover { color: var(--p500); background: var(--p50); }
-        .tab-btn.active { background: var(--p500); color: white; }
+        .tab-btn.active { background: var(--p500); color: white; box-shadow: 0 4px 10px rgba(230,73,128,0.15); }
 
         /* Tab Content & Tables */
         .tab-pane { display: none; }
@@ -81,7 +108,7 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
         .tbl-card { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .tbl-hd { padding: 20px 24px; border-bottom: 1.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fffbfd; }
         .tbl-title { font-size: 16px; font-weight: 700; color: var(--g900); display: flex; align-items: center; gap: 8px; }
-        .tbl-total { font-size: 15px; font-weight: 700; color: var(--g900); background: var(--g50); padding: 6px 14px; border-radius: 99px; border: 1px solid var(--g200); }
+        .tbl-total { font-size: 14px; font-weight: 700; color: var(--g900); background: var(--g50); padding: 6px 14px; border-radius: 99px; border: 1px solid var(--g200); }
         
         .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         .data-table th { background: #fffbfd; padding: 16px 24px; font-weight: 700; color: var(--g700); border-bottom: 1.5px solid var(--border); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -108,7 +135,7 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
         @media print {
             body { background: white; color: black; }
             .sidebar, .print-btn, .tabs-nav, .tbl-hd a { display: none !important; }
-            .main-content { padding: 0; max-width: 100%; }
+            .main-content { margin-left: 0; padding: 0; max-width: 100%; }
             .s-card { border: 1px solid #ccc; box-shadow: none; }
             .tab-pane { display: block !important; opacity: 1 !important; transform: none !important; margin-bottom: 40px; page-break-inside: avoid; }
             .tbl-card { border: 1px solid #ccc; box-shadow: none; overflow: visible; }
@@ -119,7 +146,48 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
 </head>
 <body>
 
-    <?php include 'sidebar.php'; ?>
+    <aside class="sidebar">
+        <div class="sb-hd">
+            <div class="sb-logo"><i class="bi bi-scissors"></i></div>
+            <div class="sb-brand">Konveksi<span>Owner</span></div>
+        </div>
+        <nav class="sb-menu">
+            <a href="index.php" class="sb-item">
+                <div class="sb-item-left"><i class="bi bi-grid-1x2-fill"></i>Dashboard</div>
+            </a>
+            <a href="konfirmasi_pembayaran.php" class="sb-item">
+                <div class="sb-item-left"><i class="bi bi-credit-card-check-fill"></i>Konfirmasi Bayar</div>
+                <?php if($notif_bayar > 0): ?><span class="sb-badge red"><?= $notif_bayar ?></span><?php endif; ?>
+            </a>
+            <a href="chat.php" class="sb-item">
+                <div class="sb-item-left"><i class="bi bi-chat-square-dots-fill"></i>Chat Masuk</div>
+                <?php if($notif_chat > 0): ?><span class="sb-badge red"><?= $notif_chat ?></span><?php endif; ?>
+            </a>
+            <a href="kelola_penjahit.php" class="sb-item">
+                <div class="sb-item-left"><i class="bi bi-person-badge-fill"></i>Kelola Penjahit</div>
+            </a>
+            <a href="penggajian.php" class="sb-item">
+                <div class="sb-item-left"><i class="bi bi-cash-stack"></i>Penggajian</div>
+            </a>
+            <a href="kelola_aset.php" class="sb-item">
+                <div class="sb-item-left"><i class="bi bi-building-fill-gear"></i>Kelola Aset</div>
+                <?php if($aset_rusak > 0): ?><span class="sb-badge red"><?= $aset_rusak ?></span><?php endif; ?>
+            </a>
+            <a href="laporan.php" class="sb-item active">
+                <div class="sb-item-left"><i class="bi bi-file-earmark-bar-graph-fill"></i>Laporan Keuangan</div>
+            </a>
+        </nav>
+        <div class="sb-ft">
+            <div class="usr-card">
+                <div class="usr-av"><?= $inisial ?></div>
+                <div class="usr-info">
+                    <div class="usr-name"><?= htmlspecialchars($nama_owner) ?></div>
+                    <div class="usr-role">Owner</div>
+                </div>
+                <button onclick="window.location.href='../logout.php'" class="btn-lgt" title="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+            </div>
+        </div>
+    </aside>
 
     <main class="main-content">
         <div class="page-header">
@@ -137,7 +205,7 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
                 <div class="s-icon in"><i class="bi bi-graph-up-arrow"></i></div>
                 <div class="s-info">
                     <p>Total Pendapatan (Pesanan)</p>
-                    <h3>Rp <?= number_format($total_pemasukan) ?></h3>
+                    <h3>Rp <?= number_format($omset) ?></h3>
                 </div>
             </div>
             <div class="s-card">
@@ -151,8 +219,8 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
                 <div class="s-icon bal"><i class="bi bi-wallet2"></i></div>
                 <div class="s-info">
                     <p>Saldo Bersih (Profit)</p>
-                    <h3 style="color: <?= $saldo_bersih >= 0 ? 'var(--g700)' : 'var(--r700)' ?>">
-                        Rp <?= number_format($saldo_bersih) ?>
+                    <h3 style="color: <?= $keuntungan_bersih >= 0 ? 'var(--g700)' : 'var(--r700)' ?>">
+                        Rp <?= number_format($keuntungan_bersih) ?>
                     </h3>
                 </div>
             </div>
@@ -170,7 +238,7 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
             <div class="tbl-card">
                 <div class="tbl-hd">
                     <div class="tbl-title"><i class="bi bi-bag-check"></i> Riwayat Pesanan Selesai (Pemasukan)</div>
-                    <span class="tbl-total"><i class="bi bi-arrow-up-circle-fill" style="color:var(--g500)"></i> Rp <?= number_format($total_pesanan) ?></span>
+                    <span class="tbl-total"><i class="bi bi-arrow-up-circle-fill" style="color:var(--g500)"></i> Rp <?= number_format($omset) ?></span>
                 </div>
                 <table class="data-table">
                     <thead><tr><th>ID</th><th>Pelanggan</th><th>Tanggal</th><th>Metode</th><th>Total Harga</th></tr></thead>
@@ -196,8 +264,8 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
         <div class="tab-pane" id="tab-bahan">
             <div class="tbl-card">
                 <div class="tbl-hd">
-                    <div class="tbl-title"><i class="bi bi-basket"></i> Log Belanja Bahan Baku &amp; Restock</div>
-                    <span class="tbl-total"><i class="bi bi-arrow-down-circle-fill" style="color:var(--r500)"></i> Rp <?= number_format($total_bahan) ?></span>
+                    <div class="tbl-title"><i class="bi bi-basket"></i> Log Belanja Bahan Baku & Restock</div>
+                    <span class="tbl-total"><i class="bi bi-arrow-down-circle-fill" style="color:var(--r500)"></i> Rp <?= number_format($pengeluaran_bh) ?></span>
                 </div>
                 <table class="data-table">
                     <thead><tr><th>Tanggal</th><th>Bahan Baku</th><th>Supplier</th><th>Qty</th><th>Harga Satuan</th><th>Total</th></tr></thead>
@@ -224,16 +292,16 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
         <div class="tab-pane" id="tab-gaji">
             <div class="tbl-card">
                 <div class="tbl-hd">
-                    <div class="tbl-title"><i class="bi bi-cash-stack"></i> Distribusi Gaji Penjahit &amp; Pegawai</div>
-                    <span class="tbl-total"><i class="bi bi-arrow-down-circle-fill" style="color:var(--r500)"></i> Rp <?= number_format($total_gaji) ?></span>
+                    <div class="tbl-title"><i class="bi bi-cash-stack"></i> Distribusi Gaji Penjahit & Pegawai</div>
+                    <span class="tbl-total"><i class="bi bi-arrow-down-circle-fill" style="color:var(--r500)"></i> Rp <?= number_format($pengeluaran_gj) ?></span>
                 </div>
                 <table class="data-table">
                     <thead><tr><th>Periode Gaji</th><th>Nama Penjahit</th><th>Gaji Pokok</th><th>Bonus</th><th>Total Dibayar</th><th>Status</th></tr></thead>
                     <tbody>
                     <?php
-                    $qp = mysqli_query($koneksi, "SELECT p.*, j.NAMA_PENJAHIT FROM penggajian p JOIN data_penjahit j ON p.ID_PENJAHIT=j.ID_PENJAHIT ORDER BY p.TANGGAL_GAJI DESC");
+                    $qg = mysqli_query($koneksi, "SELECT p.*, j.NAMA_PENJAHIT FROM penggajian p JOIN data_penjahit j ON p.ID_PENJAHIT=j.ID_PENJAHIT ORDER BY p.TANGGAL_GAJI DESC");
                     $cnt=0;
-                    while ($p = mysqli_fetch_assoc($qp)): $cnt++;
+                    while ($p = mysqli_fetch_assoc($qg)): $cnt++;
                         $st = $p['STATUS_BAYAR'] ?? 'Selesai';
                         
                         switch($st) {
@@ -297,7 +365,7 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
         <div class="tab-pane" id="tab-servis">
             <div class="tbl-card">
                 <div class="tbl-hd">
-                    <div class="tbl-title"><i class="bi bi-tools"></i> Riwayat Servis &amp; Perbaikan Aset</div>
+                    <div class="tbl-title"><i class="bi bi-tools"></i> Riwayat Servis & Perbaikan Aset</div>
                     <span class="tbl-total"><i class="bi bi-arrow-down-circle-fill" style="color:var(--r500)"></i> Rp <?= number_format($biaya_servis) ?></span>
                 </div>
                 <table class="data-table">
@@ -329,23 +397,17 @@ $saldo_bersih = $total_pemasukan - $total_pengeluaran;
                 </table>
             </div>
         </div>
+
     </main>
 
     <script>
-        function switchTab(tabId, btn) {
-            // Sembunyikan seluruh tab pane yang ada
-            document.querySelectorAll('.tab-pane').forEach(pane => {
-                pane.classList.remove('active');
-            });
-            // Hilangkan status active pada seluruh tombol navigasi
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active');
-            });
-            
-            // Aktifkan tab pane dan tombol yang diklik oleh user
-            document.getElementById(tabId).classList.add('active');
-            btn.classList.add('active');
-        }
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(name).classList.add('active');
+        btn.classList.add('active');
+    }
     </script>
 </body>
 </html>
