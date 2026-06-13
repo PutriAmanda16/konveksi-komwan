@@ -14,13 +14,13 @@ if(isset($_POST['bayar'])) {
     $folder = "../assets/bukti_gaji/";
     if (!is_dir($folder)) mkdir($folder, 0755, true);
     move_uploaded_file($tmp_file, $folder . $nama_file);
-
-    mysqli_query($koneksi, "INSERT INTO penggajian (ID_PRODUKSI, BUKTI_BAYAR, STATUS_TERIMA, TANGGAL_BAYAR) 
-                            VALUES ('$id_prod', '$nama_file', 'Belum', '$tgl_bayar') 
-                            ON DUPLICATE KEY UPDATE 
-                                BUKTI_BAYAR    = '$nama_file',
-                                STATUS_TERIMA  = 'Belum',
-                                TANGGAL_BAYAR  = '$tgl_bayar'");
+    $id_gaji = 'GAJ-' . time() . rand(10,99);
+    mysqli_query($koneksi, "INSERT INTO penggajian (ID_GAJI, ID_PRODUKSI, BUKTI_BAYAR, STATUS_TERIMA, TANGGAL_BAYAR) 
+                        VALUES ('$id_gaji', '$id_prod', '$nama_file', 'Belum', '$tgl_bayar') 
+                        ON DUPLICATE KEY UPDATE 
+                            BUKTI_BAYAR    = '$nama_file',
+                            STATUS_TERIMA  = 'Belum',
+                            TANGGAL_BAYAR  = '$tgl_bayar'");
 
     echo "<script>alert('✅ Gaji berhasil dikirim! Penjahit akan menerima notifikasi untuk konfirmasi.'); window.location='penggajian.php';</script>";
 }
