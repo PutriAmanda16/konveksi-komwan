@@ -602,16 +602,18 @@ body::before {
                 AND TANGGAL_SELESAI IS NULL AND DEADLINE < CURDATE()"))['t'] ?? 0;
                 // ── Kalkulasi Bonus / Penalti ──
                 $gaji_pokok   = $d['JUMLAH_DIPRODUKSI'] * $d['UPAH_PER_UNIT'];
-                $bonus_hitung = 0;
-                $penalti_hitung = 0;
-                $info_bonus   = '';
+                $bonus_hitung   = $d['BONUS']   ?? 0;
+                $penalti_hitung = $d['PENALTI'] ?? 0;
+                $info_bonus     = '';
 
                 if (!empty($d['DEADLINE']) && !empty($d['TANGGAL_SELESAI'])) {
                     $selisih_hari = (int)ceil(
-                        (strtotime($d['DEADLINE']) - strtotime($d['TANGGAL_SELESAI'])) / 86400
+                       (strtotime($d['DEADLINE']) - strtotime($d['TANGGAL_SELESAI'])) / 86400
                     );
-                    // Ambil aturan dari tabel aturan_deadline
-                    $aturan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM aturan_deadline LIMIT 1"));
+                    $tbl_check = mysqli_query($koneksi, "SHOW TABLES LIKE 'aturan_deadline'");
+                    $aturan = (mysqli_num_rows($tbl_check) > 0)
+                        ? mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT * FROM aturan_deadline LIMIT 1"))
+                        : null;
                     if ($aturan) {
                         if ($selisih_hari >= $aturan['hari_lebih_cepat'] && $d['STATUS_KUALITAS'] === 'baik') {
                             $bonus_hitung = $gaji_pokok * ($aturan['bonus_persen'] / 100);
