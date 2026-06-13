@@ -27,8 +27,8 @@ $biaya_bahan = mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT SUM(TOTAL_BIAYA)
 $biaya_lain       = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran"))['t'] ?? 0;
 $tmp = mysqli_fetch_assoc(
     mysqli_query($koneksi,
-    "SELECT COALESCE(SUM(BIAYA),0) as t
-     FROM servis_aset")
+    "SELECT COALESCE(SUM(BIAYA_SERVIS),0) as t
+     FROM servis")
 );
 
 $biaya_servis = $tmp['t'];
@@ -524,7 +524,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 $qa = mysqli_query($koneksi, "SELECT * FROM aset ORDER BY ID_ASET ASC");
                 $cnt=0;
                 while ($a = mysqli_fetch_assoc($qa)): $cnt++;
-                    $k = $a['KONDISI'] ?? 'Baik'; // Menyesuaikan dengan kolom kondisi aset kamu
+                    $k = $a['KONDISI_ASET'] ?? 'Baik'; // Menyesuaikan dengan kolom kondisi aset kamu
                     $kc = match($k){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
                     $ki = match($k){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
                 ?>
@@ -553,11 +553,11 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <tbody>
                 <?php
                 $qs = mysqli_query($koneksi,
-                    "SELECT s.*, a.NAMA_ASET, a.JENIS_ASET FROM servis_aset s
-                     JOIN aset a ON s.ID_ASET=a.ID_ASET ORDER BY s.TANGGAL_SERVIS DESC");
+                    "SELECT s.*, a.NAMA_ASET, a.JENIS_ASET FROM servis s
+                    JOIN aset a ON s.ID_ASET=a.ID_ASET ORDER BY s.TANGGAL_SERVIS DESC");
                 $cnt=0;
                 while ($s = mysqli_fetch_assoc($qs)): $cnt++;
-                    $ks = $s['KONDISI_ASET'] ?? 'Baik';
+                    $ks = $s['KONDISI_SETELAH'] ?? 'Baik';
                     $kc2 = match($ks){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
                     $ki2 = match($ks){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
                 ?>
@@ -566,7 +566,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <td style="font-weight:700"><?= htmlspecialchars($s['NAMA_ASET']) ?></td>
                     <td><span class="badge badge-b" style="font-size:11px"><?= htmlspecialchars($s['JENIS_ASET']) ?></span></td>
                     <td style="color:var(--text2);font-size:13px"><?= htmlspecialchars($s['KETERANGAN']) ?></td>
-                    <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($s['BIAYA']) ?></td>                    
+                    <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($s['BIAYA_SERVIS']) ?></td>                    
                     <td><span class="<?= $kc2 ?>"><i class="bi bi-<?= $ki2 ?>"></i> <?= htmlspecialchars($ks) ?></span></td>
                 </tr>
                 <?php endwhile; if (!$cnt): ?><tr><td colspan="6"><div class="empty-cell"><i class="bi bi-wrench"></i>Belum ada riwayat servis</div></td></tr><?php endif; ?>
