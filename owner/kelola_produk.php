@@ -257,10 +257,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .empty-sub{font-size:13px;color:var(--text3);margin-top:5px}
 
 /* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center}
+..modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(6px);z-index:1000;align-items:flex-start;justify-content:center;overflow-y:auto;padding:16px}
 .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:500px;margin:16px;overflow:hidden;box-shadow:0 24px 64px rgba(61,26,40,0.25);animation:slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);max-height:90vh;display:flex;flex-direction:column}
+.modal-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:500px;margin:auto;overflow:hidden;box-shadow:0 24px 64px rgba(61,26,40,0.25);animation:slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);display:flex;flex-direction:column}
 @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
 .modal-header{padding:20px 24px 16px;border-bottom:1.5px solid var(--border);background:linear-gradient(135deg,var(--p50),var(--white));display:flex;align-items:center;gap:12px;flex-shrink:0}
 .modal-hico{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--p500),var(--v500));display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(232,50,138,0.4)}
