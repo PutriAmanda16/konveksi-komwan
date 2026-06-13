@@ -579,7 +579,6 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
             </form>
         </div>
 
-
     <?php endwhile;?>
 
     <?php if(!$has_data):?>
@@ -589,12 +588,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
         <div class="empty-sub">Semua pesanan sudah selesai atau belum ada pesanan masuk.</div>
     </div>
     <?php endif;?>
+
     </div><!-- end cards-grid -->
-
-</div>
-</main>
-
-</div><!-- end cards-grid -->
 
 </div>
 </main>
