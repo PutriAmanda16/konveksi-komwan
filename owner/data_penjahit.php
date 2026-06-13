@@ -39,6 +39,14 @@ if (isset($_POST['tambah_penjahit'])) {
     exit;
 }
 
+// ── Handle Hapus Penjahit ──
+if (isset($_GET['hapus'])) {
+    $id = mysqli_real_escape_string($koneksi, $_GET['hapus']);
+    mysqli_query($koneksi, "DELETE FROM penjahit WHERE ID_PENJAHIT = '$id'");
+    header("Location: data_penjahit.php?sukses=3");
+    exit;
+}
+
 $total_penjahit = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM penjahit"));
 $avg_upah = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT AVG(UPAH_PER_UNIT) as a FROM penjahit"))['a'] ?? 0;
 $max_upah = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT MAX(UPAH_PER_UNIT) as m FROM penjahit"))['m'] ?? 0;
@@ -327,12 +335,15 @@ body::before { content:''; position:fixed; inset:0; background-image:radial-grad
                     <th>ID</th>
                     <th>Penjahit</th>
                     <th>Upah per Unit</th>
+                    <th>Sedang Dikerjakan</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
             <?php
-            $q = mysqli_query($koneksi, "SELECT * FROM penjahit ORDER BY NAMA_PENJAHIT ASC");
+            $q = mysqli_query($koneksi, "SELECT p.*, 
+                (SELECT KETERANGAN FROM produksi WHERE ID_PENJAHIT = p.ID_PENJAHIT AND STATUS_PRODUKSI NOT IN ('Selesai','Batal') LIMIT 1) as PEKERJAAN_AKTIF
+                FROM penjahit p ORDER BY p.NAMA_PENJAHIT ASC");
             $idx = 0;
             while($d = mysqli_fetch_assoc($q)):
                 $idx++;
@@ -357,10 +368,24 @@ body::before { content:''; position:fixed; inset:0; background-image:radial-grad
                     <div style="font-size:11px;color:var(--text3);margin-top:2px">per unit produksi</div>
                 </td>
                 <td>
+                    <?php if($d['PEKERJAAN_AKTIF']): ?>
+                        <span style="background:var(--g100);color:var(--g700);border-radius:99px;padding:4px 12px;font-size:12px;font-weight:700">
+                            🔧 <?= htmlspecialchars($d['PEKERJAAN_AKTIF']) ?>
+                        </span>
+                    <?php else: ?>
+                        <span style="color:var(--text3);font-size:12px">— Tidak ada</span>
+                    <?php endif; ?>
+                </td>
+                <td>
                     <button class="btn-edit"
                         onclick="bukaModalEdit('<?= htmlspecialchars($d['ID_PENJAHIT']) ?>', '<?= $nama ?>', <?= $d['UPAH_PER_UNIT'] ?>)">
                         <i class="bi bi-pencil-fill"></i> Edit Upah
                     </button>
+                    <a href="data_penjahit.php?hapus=<?= $d['ID_PENJAHIT'] ?>"
+                       class="btn-edit" style="background:var(--r100);color:var(--r700);border-color:rgba(239,68,68,0.2);margin-left:6px"
+                       onclick="return confirm('Hapus penjahit <?= $nama ?>?')">
+                        <i class="bi bi-trash-fill"></i> Hapus
+                    </a>
                 </td>
             </tr>
             <?php endwhile; ?>
@@ -422,8 +447,7 @@ body::before { content:''; position:fixed; inset:0; background-image:radial-grad
 <?php if(isset($_GET['sukses'])): ?>
 <div class="toast-notif" id="toastNotif">
     <i class="bi bi-check-circle-fill"></i>
-    <?= $_GET['sukses']==1 ? 'Upah berhasil diperbarui! 🎉' : 'Penjahit baru berhasil ditambahkan! 🌸' ?>
-</div>
+    <?= $_GET['sukses']==1 ? 'Upah berhasil diperbarui! 🎉' : ($_GET['sukses']==2 ? 'Penjahit baru berhasil ditambahkan! 🌸' : 'Penjahit berhasil dihapus! 🗑️') ?></div>
 <script>setTimeout(()=>{const t=document.getElementById('toastNotif');if(t){t.style.opacity='0';t.style.transform='translateY(20px)';t.style.transition='all 0.4s ease';setTimeout(()=>t.remove(),400)}},3000)</script>
 <?php endif; ?>
 
