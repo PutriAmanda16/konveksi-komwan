@@ -249,7 +249,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .empty-ico{font-size:48px;color:var(--p200);display:block;margin-bottom:12px}
 
 /* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(6px);z-index:1000;align-items:flex-start;justify-content:center}
 .modal-overlay.open{display:flex;animation:fadeIn 0.2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:480px;margin:16px;overflow:hidden;box-shadow:0 24px 64px rgba(61,26,40,0.25);animation:slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);max-height:90vh;display:flex;flex-direction:column}
