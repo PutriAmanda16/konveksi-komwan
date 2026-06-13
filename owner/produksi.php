@@ -454,6 +454,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     $has_data = false;
     // Ambil semua penjahit sekali
     $all_penjahit = [];
+    $all_produk = [];
+    $prods_all = mysqli_query($koneksi, "SELECT * FROM produk");
+    while($p_tmp = mysqli_fetch_assoc($prods_all)) $all_produk[] = $p_tmp;
     $pjs_all = mysqli_query($koneksi, "SELECT * FROM penjahit");
     while($pj_tmp = mysqli_fetch_assoc($pjs_all)) $all_penjahit[] = $pj_tmp;
     while($row = mysqli_fetch_assoc($query)):
@@ -600,12 +603,11 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         <div>
                             <label>Produk</label>
                             <select name="id_produk[]" class="m-control">
-                                <?php $prods=mysqli_query($koneksi,"SELECT * FROM produk");
-                                while($p=mysqli_fetch_assoc($prods)):?>
+                                <?php foreach($all_produk as $p):?>
                                 <option value="<?=$p['ID_PRODUK']?>" <?=$ed['ID_PRODUK']==$p['ID_PRODUK']?'selected':''?>>
                                     <?=htmlspecialchars($p['NAMA_PRODUK'])?>
                                 </option>
-                                <?php endwhile;?>
+                                <?php endforeach;?>
                             </select>
                         </div>
                         <div>
