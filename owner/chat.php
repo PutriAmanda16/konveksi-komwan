@@ -22,7 +22,7 @@ if (isset($_POST['action'])) {
                 (SELECT COUNT(*) FROM chat_sesi cs2 WHERE cs2.ID_PELANGGAN = cs.ID_PELANGGAN AND cs2.CREATED_AT <= cs.CREATED_AT) as NOMOR_SESI
             FROM chat_sesi cs
             LEFT JOIN pelanggan pl ON cs.ID_PELANGGAN = pl.ID_PELANGGAN
-            WHERE cs.STATUS = 'eskalasi'
+            WHERE cs.STATUS IN ('eskalasi', 'aktif', 'bot')
             ORDER BY cs.UPDATED_AT DESC
         ");
         $data = [];
