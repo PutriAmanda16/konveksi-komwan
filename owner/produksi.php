@@ -452,6 +452,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     <?php
     mysqli_data_seek($query, 0);
     $has_data = false;
+    // Ambil semua penjahit sekali
+    $all_penjahit = [];
+    $pjs_all = mysqli_query($koneksi, "SELECT * FROM penjahit");
+    while($pj_tmp = mysqli_fetch_assoc($pjs_all)) $all_penjahit[] = $pj_tmp;
     while($row = mysqli_fetch_assoc($query)):
         $has_data  = true;
         $id_psn    = $row['ID_PESANAN'];
@@ -527,12 +531,11 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         <select name="id_penjahit" class="form-sel">
                             <option value="">— Pilih Penjahit —</option>
                             <?php
-                            $pjs = mysqli_query($koneksi, "SELECT * FROM penjahit");
-                            while($pj = mysqli_fetch_assoc($pjs)):?>
+                            foreach($all_penjahit as $pj):?>
                             <option value="<?=$pj['ID_PENJAHIT']?>" <?=$row['ID_PENJAHIT']==$pj['ID_PENJAHIT']?'selected':''?>>
-                                <?=htmlspecialchars($pj['NAMA_PENJAHIT'])?>
+                                 <?=htmlspecialchars($pj['NAMA_PENJAHIT'])?>
                             </option>
-                            <?php endwhile;?>
+                            <?php endforeach;?>
                         </select>
                     </div>
                     <div class="form-grp" style="max-width:150px">
