@@ -644,14 +644,14 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 </div>
 
 <script>
-function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-overlay').forEach(el => {
     el.addEventListener('click', function(e){ if(e.target===this) closeModal(this.id); });
 });
 document.addEventListener('keydown', e => {
     if (e.key==='Escape') {
-        document.querySelectorAll('.modal-overlay.open,.confirm-overlay.open').forEach(el=>{el.classList.remove('open');document.body.style.overflow='';});
+        document.querySelectorAll('.modal-overlay.open,.confirm-overlay.open').forEach(el=>{el.classList.remove('open');});
     }
 });
 
