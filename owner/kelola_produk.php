@@ -268,7 +268,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .modal-hsub{font-size:12px;color:var(--text3);margin-top:2px;font-weight:500}
 .modal-close{margin-left:auto;width:30px;height:30px;border-radius:50%;background:var(--p50);border:none;color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--ease-plain)}
 .modal-close:hover{background:var(--r100);color:var(--r500)}
-.modal-scroll{overflow-y:auto;flex:1;min-height:0}
+.modal-scroll{overflow-y:auto;flex:1;min-height:0;max-height:calc(90vh - 140px)}
 .modal-body{padding:22px 24px}
 .form-group{margin-bottom:16px}
 .form-lbl{font-size:12.5px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
