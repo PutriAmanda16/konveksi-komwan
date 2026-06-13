@@ -281,7 +281,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 /* Upload foto dalam modal */
 .foto-upload-area{border:2px dashed var(--border2);border-radius:var(--r-lg);overflow:hidden;transition:border-color var(--ease-plain)}
 .foto-upload-area:has(input:focus){border-color:var(--p400)}
-.foto-preview-box{width:100%;aspect-ratio:16/9;position:relative;background:linear-gradient(135deg,var(--p50),var(--v100));display:flex;align-items:center;justify-content:center;overflow:hidden}
+.foto-preview-box{width:100%;height:160px;;position:relative;background:linear-gradient(135deg,var(--p50),var(--v100));display:flex;align-items:center;justify-content:center;overflow:hidden}
 .foto-preview-box img{width:100%;height:100%;object-fit:cover;display:none}
 .foto-preview-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--p300);width:100%;height:100%;position:absolute;inset:0}
 .foto-preview-placeholder i{font-size:32px}
