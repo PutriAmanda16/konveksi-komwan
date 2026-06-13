@@ -13,9 +13,9 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'owner') {
 if (isset($_POST['simpan_edit_total'])) {
     $id_pesanan  = mysqli_real_escape_string($koneksi, $_POST['id_pesanan']);
     $tgl         = mysqli_real_escape_string($koneksi, $_POST['tgl']);
-    $produk_ids  = $_POST['id_produk'];
-    $jumlahs     = $_POST['jumlah'];
-    $ukurans     = $_POST['ukuran'];
+    $produk_ids  = $_POST['id_produk'] ?? [];
+    $jumlahs     = $_POST['jumlah'] ?? [];
+    $ukurans     = $_POST['ukuran'] ?? [];
 
     mysqli_query($koneksi, "UPDATE pesanan SET WAKTU_PESAN='$tgl' WHERE ID_PESANAN='$id_pesanan'");
     mysqli_query($koneksi, "DELETE FROM detail_pesanan WHERE ID_PESANAN='$id_pesanan'");
