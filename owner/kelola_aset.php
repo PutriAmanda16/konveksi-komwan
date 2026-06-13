@@ -45,7 +45,7 @@ if (isset($_POST['tambah_servis'])) {
     $biaya        = mysqli_real_escape_string($koneksi, $_POST['biaya']);
     $tanggal      = mysqli_real_escape_string($koneksi, $_POST['tanggal_servis']);
     $kondisi_baru = mysqli_real_escape_string($koneksi, $_POST['kondisi_setelah']);
-    mysqli_query($koneksi, "INSERT INTO servis_aset (ID_ASET, KETERANGAN, BIAYA_SERVIS, TANGGAL_SERVIS, KONDISI_SETELAH) 
+    mysqli_query($koneksi, "INSERT INTO servis (ID_ASET, KETERANGAN, BIAYA_SERVIS, TANGGAL_SERVIS, KONDISI_SETELAH)
                             VALUES ('$id_aset', '$keterangan', '$biaya', '$tanggal', '$kondisi_baru')");
     mysqli_query($koneksi, "UPDATE aset SET KONDISI_ASET='$kondisi_baru' WHERE ID_ASET='$id_aset'");
     echo "<script>alert('Catatan servis berhasil disimpan!'); window.location='kelola_aset.php';</script>";
@@ -63,7 +63,7 @@ $total_nilai = mysqli_fetch_assoc(
 
 $total_servis = mysqli_fetch_assoc(
     mysqli_query($koneksi,
-    "SELECT COALESCE(SUM(BIAYA),0) as total FROM servis_aset")
+    "SELECT COALESCE(SUM(BIAYA_SERVIS),0) as total FROM servis")
 )['total'] ?? 0;
 
 // Database saat ini belum memiliki kolom KONDISI_ASET
@@ -71,7 +71,7 @@ $aset_rusak = 0;
 $aset_baik = count($data_aset);
 
 $q_servis = mysqli_query($koneksi, "SELECT s.*, a.NAMA_ASET, a.JENIS_ASET 
-                                    FROM servis_aset s 
+                                    FROM servis s 
                                     JOIN aset a ON s.ID_ASET = a.ID_ASET 
                                     ORDER BY s.TANGGAL_SERVIS DESC LIMIT 20");
 $riwayat_servis = [];
