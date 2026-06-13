@@ -231,7 +231,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px;}
 
 /* Pesanan card */
-.pesanan-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);overflow:hidden;transition:transform var(--ease),box-shadow var(--ease);animation:fadeUp 0.35s ease both;}
+.pesanan-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r-xl);overflow:visible;transition:transform var(--ease),box-shadow var(--ease);animation:fadeUp 0.35s ease both;}
 .pesanan-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(232,50,138,0.13);}
 <?php for($i=1;$i<=20;$i++): ?>
 .pesanan-card:nth-child(<?=$i?>){animation-delay:<?=($i-1)*0.05?>s;}
