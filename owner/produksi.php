@@ -31,8 +31,9 @@ if (isset($_POST['simpan_edit_total'])) {
             $harga_satuan = $h_row['HARGA'] ?? 0;
             $subtotal     = $harga_satuan * $jml;
             $total_harga_baru += $subtotal;
-            mysqli_query($koneksi, "INSERT INTO detail_pesanan (ID_PESANAN, ID_PRODUK, JUMLAH, UKURAN, SUBTOTAL)
-                                    VALUES ('$id_pesanan','$id_p','$jml','$ukr','$subtotal')");
+            $id_detail = 'DTL-' . time() . rand(10,99);
+            mysqli_query($koneksi, "INSERT INTO detail_pesanan (ID_DETAIL, ID_PESANAN, ID_PRODUK, JUMLAH, UKURAN, SUBTOTAL)
+                VALUES ('$id_detail','$id_pesanan','$id_p','$jml','$ukr','$subtotal')");
         }
     }
     mysqli_query($koneksi, "UPDATE pesanan SET TOTAL_HARGA='$total_harga_baru' WHERE ID_PESANAN='$id_pesanan'");
