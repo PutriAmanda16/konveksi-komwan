@@ -292,7 +292,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .empty-sub{font-size:14px;color:var(--text3);}
 
 /* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.open{display:flex;}
 .modal-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;margin:16px;box-shadow:0 24px 60px rgba(0,0,0,0.18);animation:fadeUp 0.3s ease;}
 .modal-hd{padding:20px 24px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--p50),var(--white));position:sticky;top:0;z-index:1;}
@@ -579,59 +579,6 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
             </form>
         </div>
 
-    <!-- ═══ MODAL EDIT ═══ -->
-    <div class="modal-overlay" id="modal-<?=$id_psn?>">
-        <div class="modal-box">
-            <div class="modal-hd">
-                <div class="modal-title"><i class="bi bi-pencil-square"></i> Edit Pesanan #<?=$id_psn?></div>
-                <button class="modal-close" onclick="closeModal('modal-<?=$id_psn?>')"><i class="bi bi-x-lg"></i></button>
-            </div>
-            <form method="POST" action="">
-                <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
-                <div class="modal-body">
-                    <div class="m-form-group">
-                        <label class="m-label"><i class="bi bi-calendar3"></i> Tanggal Pesan</label>
-                        <input type="date" name="tgl" class="m-control" value="<?=date('Y-m-d',strtotime($row['WAKTU_PESAN']))?>">
-                    </div>
-                    <div style="font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                        <i class="bi bi-list-check" style="color:var(--p400)"></i> Item Pesanan
-                    </div>
-                    <?php
-                    $q_edit=mysqli_query($koneksi,"SELECT * FROM detail_pesanan WHERE ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
-                    while($ed=mysqli_fetch_assoc($q_edit)):?>
-                    <div class="item-edit-row">
-                        <div>
-                            <label>Produk</label>
-                            <select name="id_produk[]" class="m-control">
-                                <?php foreach($all_produk as $p):?>
-                                <option value="<?=$p['ID_PRODUK']?>" <?=$ed['ID_PRODUK']==$p['ID_PRODUK']?'selected':''?>>
-                                    <?=htmlspecialchars($p['NAMA_PRODUK'])?>
-                                </option>
-                                <?php endforeach;?>
-                            </select>
-                        </div>
-                        <div>
-                            <label>Ukuran</label>
-                            <input type="text" name="ukuran[]" class="m-control" value="<?=htmlspecialchars($ed['UKURAN'])?>" placeholder="S/M/L/XL">
-                        </div>
-                        <div>
-                            <label>Jumlah</label>
-                            <input type="number" name="jumlah[]" class="m-control" value="<?=htmlspecialchars($ed['JUMLAH'])?>" min="1">
-                        </div>
-                    </div>
-                    <?php endwhile;?>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="modal-cancel-btn" onclick="closeModal('modal-<?=$id_psn?>')">
-                        <i class="bi bi-x"></i> Batal
-                    </button>
-                    <button type="submit" name="simpan_edit_total" class="modal-save-btn">
-                        <i class="bi bi-floppy-fill"></i> Simpan Perubahan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <?php endwhile;?>
 
@@ -646,6 +593,70 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 
 </div>
 </main>
+
+</div><!-- end cards-grid -->
+
+</div>
+</main>
+
+<!-- ════ SEMUA MODAL EDIT ════ -->
+<?php
+mysqli_data_seek($query, 0);
+while($row = mysqli_fetch_assoc($query)):
+    $id_psn = $row['ID_PESANAN'];
+    $q_edit = mysqli_query($koneksi,"SELECT * FROM detail_pesanan WHERE ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
+?>
+<div class="modal-overlay" id="modal-<?=$id_psn?>">
+    <div class="modal-box">
+        <div class="modal-hd">
+            <div class="modal-title"><i class="bi bi-pencil-square"></i> Edit Pesanan #<?=$id_psn?></div>
+            <button class="modal-close" onclick="closeModal('modal-<?=$id_psn?>')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <form method="POST" action="">
+            <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
+            <div class="modal-body">
+                <div class="m-form-group">
+                    <label class="m-label"><i class="bi bi-calendar3"></i> Tanggal Pesan</label>
+                    <input type="date" name="tgl" class="m-control" value="<?=date('Y-m-d',strtotime($row['WAKTU_PESAN']))?>">
+                </div>
+                <div style="font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                    <i class="bi bi-list-check" style="color:var(--p400)"></i> Item Pesanan
+                </div>
+                <?php while($ed=mysqli_fetch_assoc($q_edit)):?>
+                <div class="item-edit-row">
+                    <div>
+                        <label>Produk</label>
+                        <select name="id_produk[]" class="m-control">
+                            <?php foreach($all_produk as $p):?>
+                            <option value="<?=$p['ID_PRODUK']?>" <?=$ed['ID_PRODUK']==$p['ID_PRODUK']?'selected':''?>>
+                                <?=htmlspecialchars($p['NAMA_PRODUK'])?>
+                            </option>
+                            <?php endforeach;?>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Ukuran</label>
+                        <input type="text" name="ukuran[]" class="m-control" value="<?=htmlspecialchars($ed['UKURAN'])?>" placeholder="S/M/L/XL">
+                    </div>
+                    <div>
+                        <label>Jumlah</label>
+                        <input type="number" name="jumlah[]" class="m-control" value="<?=htmlspecialchars($ed['JUMLAH'])?>" min="1">
+                    </div>
+                </div>
+                <?php endwhile;?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="modal-cancel-btn" onclick="closeModal('modal-<?=$id_psn?>')">
+                    <i class="bi bi-x"></i> Batal
+                </button>
+                <button type="submit" name="simpan_edit_total" class="modal-save-btn">
+                    <i class="bi bi-floppy-fill"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endwhile;?>
 
 <script>
 function openModal(id) {
