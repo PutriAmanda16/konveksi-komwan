@@ -38,8 +38,8 @@ if (isset($_POST['tambah_pembelian'])) {
     $num      = $last ? (int)substr($last['ID_PEMBELIAN'], 2) + 1 : 1;
     $id_pb    = 'PB' . str_pad($num, 2, '0', STR_PAD_LEFT);
     mysqli_query($koneksi, "INSERT INTO pembelian_bahan (ID_PEMBELIAN, ID_SUPPLIER, ID_OWNER, TANGGAL_BELI, TOTAL_BIAYA, STATUS_BAYAR, CATATAN) VALUES ('$id_pb','$id_sup','{$_SESSION['user']}','$tgl','$total','Belum Dibayar','$catatan')");
-    mysqli_query($koneksi, "INSERT INTO detail_pembelian (ID_PEMBELIAN, ID_BAHAN, JUMLAH, HARGA_SATUAN) VALUES ('$id_pb','$id_bahan','$jumlah','$harga_satuan')");
-    mysqli_query($koneksi, "UPDATE bahan_baku SET JUMLAH_STOK = JUMLAH_STOK + $jumlah WHERE ID_BAHAN='$id_bahan'");
+    $id_detail = 'DTL' . str_pad(rand(1,9999), 4, '0', STR_PAD_LEFT);
+    mysqli_query($koneksi, "INSERT INTO detail_pembelian (ID_DETAIL_BELI, ID_PEMBELIAN, ID_BAHAN, JUMLAH_BELI, SUBTOTAL_BELI) VALUES ('$id_detail','$id_pb','$id_bahan','$jumlah','$total')");    mysqli_query($koneksi, "UPDATE bahan_baku SET JUMLAH_STOK = JUMLAH_STOK + $jumlah WHERE ID_BAHAN='$id_bahan'");
     header("Location: supplier.php"); exit;
 }
 
