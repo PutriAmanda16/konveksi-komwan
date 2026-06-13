@@ -41,8 +41,11 @@ if (isset($_POST['komplain'])) {
     $id_komplain    = mysqli_real_escape_string($koneksi, $_POST['id_produksi_komplain']);
     $catatan        = mysqli_real_escape_string($koneksi, $_POST['catatan_komplain']);
     $waktu_komplain = date('Y-m-d H:i:s');
-    mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN IF NOT EXISTS BUKTI_KOMPLAIN VARCHAR(255) NULL");
-
+// Cek dulu apakah kolom sudah ada
+    $cek_col = mysqli_query($koneksi, "SHOW COLUMNS FROM penggajian LIKE 'BUKTI_KOMPLAIN'");
+    if (mysqli_num_rows($cek_col) == 0) {
+        mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN BUKTI_KOMPLAIN VARCHAR(255) NULL");
+    }
     $nama_bukti_komplain = '';
     if (!empty($_FILES['bukti_komplain']['name'])) {
         $folder_komplain = "../assets/bukti_gaji/komplain/";
