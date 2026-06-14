@@ -9,6 +9,75 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'owner') {
     exit;
 }
 
+/*
+  ── Helper query functions ──────────────────────────────────────────────
+  PHP 8.1+ membuat mysqli melempar mysqli_sql_exception kalau query SQL
+  error (mode default: MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT).
+  Kalau exception ini tidak ditangkap, SELURUH SCRIPT BERHENTI di titik
+  itu juga -> sisa HTML di bawahnya (termasuk <script> yang isinya
+  switchTab()) tidak pernah terkirim ke browser.
+
+  Akibatnya: tab "Pesanan" tetap kelihatan (karena sudah class="active"
+  bawaan di HTML), tapi tab lain tidak bisa diklik karena fungsi
+  switchTab() tidak pernah ter-load -> error di console:
+  "Uncaught ReferenceError: switchTab is not defined".
+
+  Fungsi-fungsi di bawah ini "membungkus" setiap query: kalau error,
+  errornya dicatat ke $db_errors (akan ditampilkan di halaman untuk
+  debugging) tapi halaman tetap lanjut dirender sampai selesai.
+*/
+$db_errors = [];
+
+function db_fetch_one($koneksi, $sql, $col = 't', $default = 0) {
+    global $db_errors;
+    try {
+        $result = mysqli_query($koneksi, $sql);
+        if ($result === false) {
+            $db_errors[] = mysqli_error($koneksi) . " | SQL: " . $sql;
+            return $default;
+        }
+        $row = mysqli_fetch_assoc($result);
+        return $row[$col] ?? $default;
+    } catch (mysqli_sql_exception $e) {
+        $db_errors[] = $e->getMessage() . " | SQL: " . $sql;
+        return $default;
+    }
+}
+
+function db_fetch_all($koneksi, $sql) {
+    global $db_errors;
+    try {
+        $result = mysqli_query($koneksi, $sql);
+        if ($result === false) {
+            $db_errors[] = mysqli_error($koneksi) . " | SQL: " . $sql;
+            return [];
+        }
+        $rows = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $rows[] = $row;
+        }
+        return $rows;
+    } catch (mysqli_sql_exception $e) {
+        $db_errors[] = $e->getMessage() . " | SQL: " . $sql;
+        return [];
+    }
+}
+
+function db_count($koneksi, $sql) {
+    global $db_errors;
+    try {
+        $result = mysqli_query($koneksi, $sql);
+        if ($result === false) {
+            $db_errors[] = mysqli_error($koneksi) . " | SQL: " . $sql;
+            return 0;
+        }
+        return mysqli_num_rows($result);
+    } catch (mysqli_sql_exception $e) {
+        $db_errors[] = $e->getMessage() . " | SQL: " . $sql;
+        return 0;
+    }
+}
+
 // Sidebar helpers
 $nama_owner = $_SESSION['user'];
 $inisial     = strtoupper(substr($nama_owner, 0, 1));
@@ -16,25 +85,20 @@ if (strpos($nama_owner, ' ') !== false) {
     $parts   = explode(' ', $nama_owner);
     $inisial = strtoupper(substr($parts[0],0,1).substr($parts[1],0,1));
 }
-$notif_bayar = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'"));
-$notif_chat  = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as t FROM chat_sesi WHERE STATUS='eskalasi'"))['t'] ?? 0;
-$aset_rusak = 0;
-$stok_kritis = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM bahan_baku WHERE JUMLAH_STOK <= 25"));
+$notif_bayar = db_count($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'");
+$notif_chat  = db_fetch_one($koneksi, "SELECT COUNT(*) as t FROM chat_sesi WHERE STATUS='eskalasi'");
+$aset_rusak  = 0;
+$stok_kritis = db_count($koneksi, "SELECT * FROM bahan_baku WHERE JUMLAH_STOK <= 25");
 $total_notif = $notif_bayar + $notif_chat + $stok_kritis + $aset_rusak;
 
 // ══ KEUANGAN ══
-$omset            = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS='Selesai'"))['t'] ?? 0;
-$biaya_gaji       = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_UPAH) as t FROM penggajian WHERE STATUS_GAJI='Sudah Dibayar'"))['t'] ?? 0;
-$biaya_bahan = mysqli_fetch_assoc(mysqli_query($koneksi,"SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan"))['t'] ?? 0;
-$biaya_lain       = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran"))['t'] ?? 0;
-$tmp = mysqli_fetch_assoc(
-    mysqli_query($koneksi,
-    "SELECT COALESCE(SUM(BIAYA_SERVIS),0) as t
-     FROM servis")
-);
+$omset             = db_fetch_one($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS='Selesai'");
+$biaya_gaji        = db_fetch_one($koneksi, "SELECT SUM(TOTAL_UPAH) as t FROM penggajian WHERE STATUS_GAJI='Sudah Dibayar'");
+$biaya_bahan       = db_fetch_one($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan");
+$biaya_lain        = db_fetch_one($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran");
+$biaya_servis      = db_fetch_one($koneksi, "SELECT COALESCE(SUM(BIAYA_SERVIS),0) as t FROM servis");
 
-$biaya_servis = $tmp['t'];
-$hutang           = 0;
+$hutang            = 0;
 $total_pengeluaran = $biaya_gaji + $biaya_bahan + $biaya_lain + $biaya_servis;
 $laba_bersih       = $omset - $total_pengeluaran;
 $margin_pct        = $omset > 0 ? round(($laba_bersih / $omset) * 100, 1) : 0;
@@ -225,9 +289,16 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .bukti-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;background:var(--b100);color:var(--b700);border:1px solid rgba(59,130,246,0.2);text-decoration:none;transition:all var(--ease-plain)}
 .bukti-btn:hover{background:var(--b500);color:#fff}
 
+/* Debug panel (query error) */
+.debug-card{background:var(--white);border:1.5px solid var(--r500);border-radius:var(--r-xl);overflow:hidden;margin-bottom:20px}
+.debug-hd{padding:14px 24px;background:var(--r100);display:flex;align-items:center;gap:8px;font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;color:var(--r700)}
+.debug-body{padding:14px 24px;font-size:12px;color:var(--r700);font-family:monospace;word-break:break-all}
+.debug-item{padding:8px 0;border-bottom:1px dashed var(--r100)}
+.debug-item:last-child{border-bottom:none}
+
 @media(max-width:1280px){.fin-grid,.breakdown-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:900px){.sidebar{transform:translateX(-100%)}.topbar{left:0}.main{margin-left:0}.fin-grid{grid-template-columns:repeat(2,1fr)}.breakdown-grid{grid-template-columns:1fr 1fr}.laba-banner{flex-direction:column;gap:14px}}
-@media print{.sidebar,.topbar,.tab-nav,.print-btn{display:none!important}.main{margin-left:0!important;padding-top:0!important}.content{padding:16px!important}}
+@media print{.sidebar,.topbar,.tab-nav,.print-btn,.debug-card{display:none!important}.main{margin-left:0!important;padding-top:0!important}.content{padding:16px!important}}
 </style>
 </head>
 <body>
@@ -320,6 +391,18 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
         </div>
     </div>
 
+    <?php if (!empty($db_errors)): ?>
+    <!-- ── DEBUG: Query Error ── -->
+    <div class="debug-card">
+        <div class="debug-hd"><i class="bi bi-exclamation-triangle-fill"></i> Query Error Terdeteksi (<?= count($db_errors) ?>) — perbaiki query/struktur tabel di bawah ini</div>
+        <div class="debug-body">
+            <?php foreach ($db_errors as $err): ?>
+                <div class="debug-item"><?= htmlspecialchars($err) ?></div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- ── RINGKASAN KEUANGAN ── -->
     <div class="sec-hd" style="margin-top:4px">
         <div class="sec-title"><span class="sec-dot"></span> Ringkasan Keuangan 💰</div>
@@ -402,9 +485,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <thead><tr><th>ID Pesanan</th><th>Tanggal</th><th>Pelanggan</th><th>Total Harga</th><th>Status</th></tr></thead>
                 <tbody>
                 <?php
-                $q = mysqli_query($koneksi, "SELECT p.*, pl.NAMA_PELANGGAN FROM pesanan p LEFT JOIN pelanggan pl ON p.ID_PELANGGAN=pl.ID_PELANGGAN ORDER BY WAKTU_PESAN DESC");
-                $cnt=0;
-                while ($row = mysqli_fetch_assoc($q)): $cnt++;
+                $rows_pesanan = db_fetch_all($koneksi, "SELECT p.*, pl.NAMA_PELANGGAN FROM pesanan p LEFT JOIN pelanggan pl ON p.ID_PELANGGAN=pl.ID_PELANGGAN ORDER BY WAKTU_PESAN DESC");
+                if (empty($rows_pesanan)): ?>
+                    <tr><td colspan="5"><div class="empty-cell"><i class="bi bi-bag-x"></i>Belum ada data pesanan</div></td></tr>
+                <?php else: foreach ($rows_pesanan as $row):
                     $st=$row['STATUS']??'Pending';
                     $sc=($st=='Selesai')?'badge-g':(($st=='Proses')?'badge-b':'badge-y');
                     $si=($st=='Selesai')?'check-circle-fill':(($st=='Proses')?'arrow-repeat':'clock');
@@ -416,7 +500,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <td style="font-weight:700;color:var(--g700)">Rp <?= number_format($row['TOTAL_HARGA']) ?></td>
                     <td><span class="badge <?= $sc ?>"><i class="bi bi-<?= $si ?>"></i> <?= $st ?></span></td>
                 </tr>
-                <?php endwhile; if (!$cnt): ?><tr><td colspan="5"><div class="empty-cell"><i class="bi bi-bag-x"></i>Belum ada data pesanan</div></td></tr><?php endif; ?>
+                <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
@@ -433,7 +517,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <thead><tr><th>ID Pembelian</th><th>Tanggal</th><th>Supplier</th><th>Detail Bahan</th><th>Total Biaya</th><th>Status</th></tr></thead>
                 <tbody>
                 <?php
-                $q2 = mysqli_query($koneksi,
+                $rows_pembelian = db_fetch_all($koneksi,
                     "SELECT pb.*, s.NAMA_SUPPLIER,
                      GROUP_CONCAT(CONCAT(dp.JUMLAH,'x ',bk.NAMA_BAHAN) SEPARATOR ', ') as DETAIL
                      FROM pembelian_bahan pb
@@ -441,8 +525,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                      LEFT JOIN detail_pembelian dp ON pb.ID_PEMBELIAN=dp.ID_PEMBELIAN
                      LEFT JOIN bahan_baku bk ON dp.ID_BAHAN=bk.ID_BAHAN
                      GROUP BY pb.ID_PEMBELIAN ORDER BY pb.TANGGAL_BELI DESC");
-                $cnt=0;
-                while ($pb = mysqli_fetch_assoc($q2)): $cnt++;
+                if (empty($rows_pembelian)): ?>
+                    <tr><td colspan="6"><div class="empty-cell"><i class="bi bi-basket2"></i>Belum ada data pembelian</div></td></tr>
+                <?php else: foreach ($rows_pembelian as $pb):
                     $sp=$pb['STATUS_BAYAR']??'Belum Dibayar';
                     $lunas=($sp=='Sudah Dibayar');
                 ?>
@@ -459,7 +544,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         </span>
                     </td>
                 </tr>
-                <?php endwhile; if (!$cnt): ?><tr><td colspan="6"><div class="empty-cell"><i class="bi bi-basket2"></i>Belum ada data pembelian</div></td></tr><?php endif; ?>
+                <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
@@ -476,12 +561,13 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <thead><tr><th>ID Gaji</th><th>Nama Penjahit</th><th>Total Upah</th><th>Status</th><th>Bukti</th></tr></thead>
                 <tbody>
                 <?php
-                $q3 = mysqli_query($koneksi,
+                $rows_gaji = db_fetch_all($koneksi,
                     "SELECT g.*, p.NAMA_PENJAHIT FROM penggajian g
                      JOIN penjahit p ON g.ID_PENJAHIT=p.ID_PENJAHIT
                      ORDER BY g.ID_GAJI DESC");
-                $cnt=0;
-                while ($g = mysqli_fetch_assoc($q3)): $cnt++;
+                if (empty($rows_gaji)): ?>
+                    <tr><td colspan="5"><div class="empty-cell"><i class="bi bi-cash-coin"></i>Belum ada data penggajian</div></td></tr>
+                <?php else: foreach ($rows_gaji as $g):
                     $sg=$g['STATUS_GAJI']??'Belum Dibayar';
                     $lunas=($sg=='Sudah Dibayar');
                 ?>
@@ -505,13 +591,12 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         <?php endif; ?>
                     </td>
                 </tr>
-                <?php endwhile; if (!$cnt): ?><tr><td colspan="5"><div class="empty-cell"><i class="bi bi-cash-coin"></i>Belum ada data penggajian</div></td></tr><?php endif; ?>
+                <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- TAB: Aset -->
     <!-- TAB: Aset -->
     <div class="tab-pane" id="tab-aset">
         <div class="tbl-card">
@@ -523,9 +608,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <thead><tr><th>ID Aset</th><th>Nama Aset</th><th>Jenis</th><th>Nilai Aset</th><th>Kondisi</th></tr></thead>
                 <tbody>
                 <?php
-                $qa = mysqli_query($koneksi, "SELECT * FROM aset ORDER BY ID_ASET ASC");
-                $cnt=0;
-                while ($a = mysqli_fetch_assoc($qa)): $cnt++;
+                $rows_aset = db_fetch_all($koneksi, "SELECT * FROM aset ORDER BY ID_ASET ASC");
+                if (empty($rows_aset)): ?>
+                    <tr><td colspan="5"><div class="empty-cell"><i class="bi bi-building"></i>Belum ada data aset</div></td></tr>
+                <?php else: foreach ($rows_aset as $a):
                     $k = $a['KONDISI_ASET'] ?? 'Baik'; // Menyesuaikan dengan kolom kondisi aset kamu
                     $kc = match($k){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
                     $ki = match($k){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
@@ -537,7 +623,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <td style="font-weight:700;color:var(--text)">Rp <?= number_format($a['NILAI_ASET']) ?></td>
                     <td><span class="<?= $kc ?>"><i class="bi bi-<?= $ki ?>"></i> <?= htmlspecialchars($k) ?></span></td>
                 </tr>
-                <?php endwhile; if (!$cnt): ?><tr><td colspan="5"><div class="empty-cell"><i class="bi bi-building"></i>Belum ada data aset</div></td></tr><?php endif; ?>
+                <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
@@ -554,11 +640,12 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <thead><tr><th>Tanggal</th><th>Nama Aset</th><th>Jenis</th><th>Keterangan</th><th>Biaya</th><th>Kondisi Setelah</th></tr></thead>
                 <tbody>
                 <?php
-                $qs = mysqli_query($koneksi,
+                $rows_servis = db_fetch_all($koneksi,
                     "SELECT s.*, a.NAMA_ASET, a.JENIS_ASET FROM servis s
                     JOIN aset a ON s.ID_ASET=a.ID_ASET ORDER BY s.TANGGAL_SERVIS DESC");
-                $cnt=0;
-                while ($s = mysqli_fetch_assoc($qs)): $cnt++;
+                if (empty($rows_servis)): ?>
+                    <tr><td colspan="6"><div class="empty-cell"><i class="bi bi-wrench"></i>Belum ada riwayat servis</div></td></tr>
+                <?php else: foreach ($rows_servis as $s):
                     $ks = $s['KONDISI_SETELAH'] ?? 'Baik';
                     $kc2 = match($ks){'Perlu Service'=>'kond-service','Perlu Perbaikan'=>'kond-perlu','Rusak'=>'kond-rusak',default=>'kond-baik'};
                     $ki2 = match($ks){'Perlu Service'=>'wrench','Perlu Perbaikan'=>'exclamation-triangle-fill','Rusak'=>'x-circle-fill',default=>'check-circle-fill'};
@@ -568,10 +655,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <td style="font-weight:700"><?= htmlspecialchars($s['NAMA_ASET']) ?></td>
                     <td><span class="badge badge-b" style="font-size:11px"><?= htmlspecialchars($s['JENIS_ASET']) ?></span></td>
                     <td style="color:var(--text2);font-size:13px"><?= htmlspecialchars($s['KETERANGAN']) ?></td>
-                    <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($s['BIAYA_SERVIS']) ?></td>                    
+                    <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($s['BIAYA_SERVIS']) ?></td>
                     <td><span class="<?= $kc2 ?>"><i class="bi bi-<?= $ki2 ?>"></i> <?= htmlspecialchars($ks) ?></span></td>
                 </tr>
-                <?php endwhile; if (!$cnt): ?><tr><td colspan="6"><div class="empty-cell"><i class="bi bi-wrench"></i>Belum ada riwayat servis</div></td></tr><?php endif; ?>
+                <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
