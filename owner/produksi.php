@@ -50,7 +50,6 @@ if (isset($_POST['update_produksi'])) {
     $id_penjahit = mysqli_real_escape_string($koneksi, $_POST['id_penjahit']);
     $deadline    = mysqli_real_escape_string($koneksi, $_POST['deadline'] ?? '');
 
-    // Update status & penjahit di tabel pesanan
     // Update status, penjahit, & deadline di tabel pesanan
     mysqli_query($koneksi,
         "UPDATE pesanan SET STATUS='$status', ID_PENJAHIT='$id_penjahit', DEADLINE='$deadline'
@@ -289,253 +288,13 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 
 .card-body-inner{padding:18px 20px;}
 .pelanggan-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-.pel-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--p400),var(--v500));display:flex;align-items:center;justify-content:center;font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 3px 10px rgba(232,50,138,0.3);}
-.pel-name{font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;color:var(--text);}
-.pel-date{font-size:11.5px;color:var(--text3);font-weight:500;margin-top:1px;}
-
-/* Status badge */
-.status-badge{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 12px;font-size:11.5px;font-weight:700;white-space:nowrap;}
-.st-pending{background:var(--a100);color:var(--a700);border:1px solid rgba(234,179,8,0.25);}
-.st-proses{background:var(--b100);color:var(--b700);border:1px solid rgba(59,130,246,0.25);}
-.st-selesai{background:var(--g100);color:var(--g700);border:1px solid rgba(34,197,94,0.25);}
-.dot-s{width:6px;height:6px;border-radius:50%;display:inline-block;}
-.st-pending .dot-s{background:var(--a500);}
-.st-proses .dot-s{background:var(--b500);}
-.st-selesai .dot-s{background:var(--g500);}
-
-/* Item list */
-.item-box{background:var(--p50);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:14px;}
-.item-box-title{font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.item-box-title i{color:var(--p400);}
-.item-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
-.item-row:last-child{border-bottom:none;}
-.item-name{font-size:13px;font-weight:700;color:var(--text);}
-.item-meta{font-size:11.5px;color:var(--text3);margin-top:1px;}
-.item-sub{font-size:12.5px;font-weight:700;color:var(--p600);}
-.total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg,var(--p500),var(--p400));border-radius:var(--r-md);margin-bottom:14px;}
-.total-lbl{font-size:12px;font-weight:700;color:rgba(255,255,255,0.85);}
-.total-val{font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;color:#fff;}
-
-/* Form inside card */
-.card-form{border-top:1.5px solid var(--border);padding:16px 20px;background:linear-gradient(135deg,var(--p50),var(--white));}
-.form-row-inline{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
-.form-grp{display:flex;flex-direction:column;gap:5px;flex:1;min-width:120px;}
-.form-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;}
-.form-sel,.form-inp{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:var(--text);background:var(--white);outline:none;transition:border-color var(--ease-plain);}
-.form-sel:focus,.form-inp:focus{border-color:var(--p400);box-shadow:0 0 0 3px rgba(232,50,138,0.1);}
-.update-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--p500),var(--p400));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:'Nunito',sans-serif;transition:all var(--ease);white-space:nowrap;box-shadow:0 3px 10px rgba(232,50,138,0.3);}
-.update-btn:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(232,50,138,0.4);}
-
-/* Empty state */
-.empty-wrap{grid-column:1/-1;padding:80px 32px;text-align:center;}
-.empty-icon{font-size:56px;color:var(--p200);margin-bottom:16px;}
-.empty-title{font-family:'Quicksand',sans-serif;font-size:20px;font-weight:700;color:var(--text2);margin-bottom:8px;}
-.empty-sub{font-size:14px;color:var(--text3);}
-
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:16px;}
-.modal-overlay.open{display:flex;}
-.modal-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;margin:16px;box-shadow:0 24px 60px rgba(0,0,0,0.18);animation:fadeUp 0.3s ease;}
-.modal-hd{padding:20px 24px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--p50),var(--white));position:sticky;top:0;z-index:1;}
-.modal-title{font-family:'Quicksand',sans-serif;font-size:17px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
-.modal-title i{color:var(--p500);}
-.modal-close{width:32px;height:32px;border-radius:9px;background:var(--r100);color:var(--r700);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all var(--ease-plain);}
-.modal-close:hover{background:var(--r500);color:#fff;}
-.modal-body{padding:24px;}
-.modal-footer{padding:16px 24px;border-top:1.5px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--p50);}
-
-.m-form-group{margin-bottom:16px;}
-.m-label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;}
-.m-control{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-md);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text);background:var(--p50);outline:none;transition:border-color var(--ease-plain),box-shadow var(--ease-plain);}
-.m-control:focus{border-color:var(--p400);box-shadow:0 0 0 3px rgba(232,50,138,0.12);background:var(--white);}
-.item-edit-row{display:grid;grid-template-columns:1fr 100px 80px;gap:10px;margin-bottom:10px;padding:12px;background:var(--p50);border:1px solid var(--border);border-radius:var(--r-md);}
-.item-edit-row label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;display:block;}
-.modal-save-btn{display:flex;align-items:center;gap:7px;padding:11px 24px;border-radius:99px;background:linear-gradient(135deg,var(--p500),var(--p400));color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 14px rgba(232,50,138,0.35);transition:all var(--ease);}
-.modal-save-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(232,50,138,0.45);}
-.modal-cancel-btn{display:flex;align-items:center;gap:7px;padding:11px 20px;border-radius:99px;background:var(--white);border:1.5px solid var(--border);color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all var(--ease-plain);}
-.modal-cancel-btn:hover{background:var(--p50);color:var(--p500);}
-
-@media(max-width:1280px){.stat-strip{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:900px){.sidebar{transform:translateX(-100%);}.topbar{left:0;}.main{margin-left:0;}.stat-strip{grid-template-columns:1fr;}.cards-grid{grid-template-columns:1fr;}}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(0.85);opacity:0.6}}
-.pulse{animation:pulse 1.8s ease-in-out infinite;}
-</style>
-</head>
-<body>
-
-<?php if($msg==='updated'):?>
-<div class="toast-notif toast-success"><i class="bi bi-check-circle-fill"></i> Status produksi berhasil diperbarui!</div>
-<?php elseif($msg==='deleted'):?>
-<div class="toast-notif toast-deleted"><i class="bi bi-trash-fill"></i> Pesanan berhasil dihapus.</div>
-<?php endif;?>
-
-<!-- ════ SIDEBAR ════ -->
-<aside class="sidebar">
-    <a href="dashboard.php" class="sb-brand">
-        <div class="brand-mark"><i class="bi bi-scissors"></i></div>
-        <div>
-            <div class="brand-name">Konveksi Apps</div>
-            <div class="brand-sub">Panel Owner</div>
-        </div>
-    </a>
-    <div class="sb-owner">
-        <div class="owner-av"><?=$inisial?></div>
-        <div style="overflow:hidden;min-width:0">
-            <div class="owner-name"><?=htmlspecialchars($nama_owner)?></div>
-            <div class="owner-role">✨ Owner · Administrator</div>
-        </div>
-    </div>
-    <nav class="sb-nav">
-        <a class="nav-item" href="dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
-        <div class="nav-group-label">Manajemen Data</div>
-        <a class="nav-item" href="kelola_produk.php"><i class="bi bi-box-seam"></i> Produk</a>
-        <a class="nav-item" href="kelola_bahan.php">
-            <i class="bi bi-basket"></i> Bahan Baku
-            <?php if($stok_kritis>0):?><span class="nav-pill pill-orange pulse"><?=$stok_kritis?></span><?php endif;?>
-        </a>
-        <a class="nav-item" href="kelola_aset.php">
-            <i class="bi bi-building-gear"></i> Aset &amp; Inventaris
-            <?php if($aset_rusak>0):?><span class="nav-pill pill-orange pulse"><?=$aset_rusak?></span><?php endif;?>
-        </a>
-        <a class="nav-item" href="data_penjahit.php"><i class="bi bi-people"></i> Data Penjahit</a>
-        <a class="nav-item" href="pelanggan.php"><i class="bi bi-person-badge"></i> Data Pelanggan</a>
-        <a class="nav-item" href="supplier.php"><i class="bi bi-truck"></i> Data Supplier</a>
-        <div class="nav-group-label">Operasional</div>
-        <a class="nav-item active" href="produksi.php"><i class="bi bi-gear-wide-connected"></i> Produksi Aktif</a>
-        <a class="nav-item" href="penggajian.php"><i class="bi bi-cash-stack"></i> Penggajian</a>
-        <a class="nav-item" href="konfirmasi_pembayaran.php">
-            <i class="bi bi-credit-card-2-front"></i> Konfirmasi Bayar
-            <?php if($notif_bayar>0):?><span class="nav-pill pill-pink pulse"><?=$notif_bayar?></span><?php endif;?>
-        </a>
-        <a class="nav-item" href="chat.php">
-            <i class="bi bi-chat-dots-fill"></i> Inbox Chat
-            <?php if($notif_chat>0):?><span class="nav-pill pill-red pulse"><?=$notif_chat?></span><?php endif;?>
-        </a>
-        <div class="nav-group-label">Laporan</div>
-        <a class="nav-item" href="laporan.php"><i class="bi bi-file-earmark-bar-graph"></i> Laporan Keuangan</a>
-    </nav>
-    <div class="sb-footer">
-        <a class="nav-item logout" href="../auth/logout.php"><i class="bi bi-box-arrow-left"></i> Keluar</a>
-    </div>
-</aside>
-
-<!-- ════ TOPBAR ════ -->
-<header class="topbar">
-    <div class="tb-greeting">
-        <div class="tb-hello">Produksi Aktif ⚙️</div>
-        <div class="tb-sub">Pantau dan kelola semua pesanan yang sedang berjalan</div>
-    </div>
-    <nav class="tb-nav">
-        <a class="tb-nav-item" href="dashboard.php"><i class="bi bi-grid-1x2"></i> Dashboard</a>
-        <a class="tb-nav-item" href="pelanggan.php"><i class="bi bi-person-badge"></i> Pelanggan</a>
-        <a class="tb-nav-item" href="laporan.php"><i class="bi bi-bar-chart-line"></i> Laporan</a>
-    </nav>
-    <div class="tb-divider"></div>
-    <div class="tb-actions">
-        <a href="<?=$total_notif>0?'konfirmasi_pembayaran.php':'#'?>" class="icon-btn">
-            <i class="bi bi-bell-fill"></i>
-            <?php if($total_notif>0):?><span class="dot"></span><?php endif;?>
-        </a>
-        <div class="date-pill"><i class="bi bi-calendar-heart"></i> <?=date('d M Y')?></div>
-    </div>
-</header>
-
-<!-- ════ MAIN ════ -->
-<main class="main">
-<div class="content">
-
-    <!-- Page Header -->
-    <div class="page-hd anim">
-        <div class="page-title-wrap">
-            <div class="page-icon"><i class="bi bi-gear-wide-connected"></i></div>
-            <div>
-                <div class="page-title">Produksi Aktif 🏭</div>
-                <div class="page-subtitle">Semua pesanan yang sedang berjalan</div>
-            </div>
-        </div>
-        <a href="dashboard.php" class="back-btn"><i class="bi bi-arrow-left"></i> Kembali ke Dashboard</a>
-    </div>
-
-    <!-- Stat Strip -->
-    <div class="stat-strip anim" style="animation-delay:0.06s">
-        <div class="stat-card sc-pink">
-            <div class="stat-ico" style="background:var(--p50);color:var(--p500)"><i class="bi bi-collection-fill"></i></div>
-            <div>
-                <div class="stat-lbl">Total Aktif</div>
-                <div class="stat-val" style="color:var(--p600)"><?=$total_produksi?></div>
-            </div>
-        </div>
-        <div class="stat-card sc-orange">
-            <div class="stat-ico" style="background:var(--a100);color:var(--a500)"><i class="bi bi-hourglass-split"></i></div>
-            <div>
-                <div class="stat-lbl">Pending</div>
-                <div class="stat-val" style="color:var(--a700)"><?=$total_pending?></div>
-            </div>
-        </div>
-        <div class="stat-card sc-blue">
-            <div class="stat-ico" style="background:var(--b100);color:var(--b500)"><i class="bi bi-arrow-repeat"></i></div>
-            <div>
-                <div class="stat-lbl">Sedang Proses</div>
-                <div class="stat-val" style="color:var(--b700)"><?=$total_proses?></div>
-            </div>
-        </div>
-        <div class="stat-card sc-green">
-            <div class="stat-ico" style="background:var(--g100);color:var(--g500)"><i class="bi bi-check-circle-fill"></i></div>
-            <div>
-                <div class="stat-lbl">Selesai</div>
-                <div class="stat-val" style="color:var(--g700)"><?=$total_selesai?></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cards Grid -->
-    <div class="cards-grid">
-    <?php
-    mysqli_data_seek($query, 0);
-    $has_data = false;
-    // Ambil semua penjahit sekali
-    $all_penjahit = [];
-    $all_produk = [];
-    $prods_all = mysqli_query($koneksi, "SELECT * FROM produk");
-    while($p_tmp = mysqli_fetch_assoc($prods_all)) $all_produk[] = $p_tmp;
-    $pjs_all = mysqli_query($koneksi, "SELECT * FROM penjahit");
-    while($pj_tmp = mysqli_fetch_assoc($pjs_all)) $all_penjahit[] = $pj_tmp;
-    while($row = mysqli_fetch_assoc($query)):
-        $has_data  = true;
-        $id_psn    = $row['ID_PESANAN'];
-        $nama_pel  = $row['NAMA_PELANGGAN'] ?? '-';
-        $huruf     = strtoupper(substr($nama_pel,0,1));
-        $colors    = ['#e8328a','#a855f7','#3b82f6','#22c55e','#f97316','#eab308','#ef4444','#06b6d4'];
-        $clr       = $colors[ord($huruf)%count($colors)];
-        $st        = $row['STATUS'] ?? 'Pending';
-        $st_class  = $st==='Selesai'?'st-selesai':($st==='Proses'?'st-proses':'st-pending');
-    ?>
-    <div class="pesanan-card">
-        <!-- Card Top -->
-        <div class="card-top">
-            <span class="card-id"><i class="bi bi-hash"></i><?=$id_psn?></span>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span class="status-badge <?=$st_class?>"><span class="dot-s"></span><?=htmlspecialchars($st)?></span>
-                <div class="card-actions">
-                    <button class="act-btn act-edit" onclick="openModal('modal-<?=$id_psn?>')" title="Edit Item"><i class="bi bi-pencil"></i></button>
-                    <a href="?hapus=<?=urlencode($id_psn)?>" class="act-btn act-del" title="Hapus"
-                       onclick="return confirm('Yakin hapus pesanan #<?=$id_psn?> secara permanen?')"><i class="bi bi-trash"></i></a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card Body -->
-        <div class="card-body-inner">
-            <!-- Pelanggan -->
-            <div class="pelanggan-row">
-                <div class="pel-av" style="background:linear-gradient(135deg,<?=$clr?>,<?=$clr?>bb)"><?=$huruf?></div>
+.pel-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--clr),var(--clr)bb)"><?=$huruf?></div>
                 <div>
                     <div class="pel-name"><?=htmlspecialchars($nama_pel)?></div>
                     <div class="pel-date"><i class="bi bi-calendar3" style="font-size:10px"></i> <?=date('d F Y',strtotime($row['WAKTU_PESAN']))?></div>
                 </div>
             </div>
 
-            <!-- Items -->
             <div class="item-box">
                 <div class="item-box-title"><i class="bi bi-list-check"></i> Rincian Item</div>
                 <?php
@@ -543,33 +302,37 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     "SELECT pr.NAMA_PRODUK, dp.* FROM detail_pesanan dp
                     JOIN produk pr ON dp.ID_PRODUK = pr.ID_PRODUK
                     WHERE dp.ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
-                if($q_item && mysqli_num_rows($q_item)>0):
-                    while($it=mysqli_fetch_assoc($q_item)):?>
+         
+                if($q_item && mysqli_num_rows($q_item) > 0):
+                    while($it = mysqli_fetch_assoc($q_item)): 
+                ?>
                 <div class="item-row">
-                <div>
-                    <div class="item-name"><?=htmlspecialchars($it['NAMA_PRODUK'])?></div>
-                    <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> · <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs</div>
-                    <div class="item-meta" style="color: var(--text2); font-style: italic; margin-top: 3px;">
-                        <i class="bi bi-info-circle"></i> Keterangan: <?=htmlspecialchars($row['KETERANGAN'] ?? $row['keterangan'] ?? 'Tidak ada keterangan')?>
+                    <div>
+                        <div class="item-name"><?=htmlspecialchars($it['NAMA_PRODUK'])?></div>
+                        <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> · <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs</div>
+            
+                        <div class="item-meta" style="color: var(--text2); font-style: italic; margin-top: 3px;">
+                            <i class="bi bi-info-circle"></i> Keterangan: <?=htmlspecialchars($row['KETERANGAN'] ?? $row['keterangan'] ?? 'Tidak ada keterangan')?>
+                        </div>
+                    </div>
+                    <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'],0,',','.')?></div>
                 </div>
-            </div>
-            <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'],0,',','.')?></div>
-        </div>
-        <?php endwhile;
-                <?php endwhile;
-                else:?>
-                <div style="font-size:13px;color:var(--text3);text-align:center;padding:8px 0">Belum ada item</div>
-                <?php endif;?>
+                <?php 
+                    endwhile;
+                else: 
+                ?>
+                <div style="color: var(--text3); font-style: italic; text-align: center; padding: 10px 0;">Belum ada item</div>
+                <?php 
+                endif; 
+                ?>
             </div>
 
-            <!-- Total -->
             <div class="total-row">
                 <span class="total-lbl"><i class="bi bi-receipt"></i> Total Harga</span>
                 <span class="total-val">Rp <?=number_format($row['TOTAL_HARGA']??0,0,',','.')?></span>
             </div>
         </div>
 
-        <!-- Update Form -->
         <div class="card-form">
             <form method="POST" action="">
                 <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
@@ -622,7 +385,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 </div>
             </form>
         </div>
-
+    </div>
     <?php endwhile;?>
 
     <?php if(!$has_data):?>
@@ -633,12 +396,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     </div>
     <?php endif;?>
 
-    </div><!-- end cards-grid -->
-
-</div>
+    </div></div>
 </main>
 
-<!-- ════ SEMUA MODAL EDIT ════ -->
 <?php
 mysqli_data_seek($query, 0);
 while($row = mysqli_fetch_assoc($query)):
