@@ -559,7 +559,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <tbody>
                 <?php
                 $rows_gaji = db_fetch_all($koneksi,
-                    "SELECT g.*, p.NAMA_PENJAHIT FROM penggajian g
+                    "SELECT g.*, COALESCE(p.NAMA_PENJAHIT, '— Tidak Ditemukan') AS NAMA_PENJAHIT
+                    FROM penggajian g
                     LEFT JOIN penjahit p ON g.ID_PENJAHIT = p.ID_PENJAHIT
                     ORDER BY g.ID_GAJI DESC");
                 if (empty($rows_gaji)): ?>
@@ -570,8 +571,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 ?>
                 <tr>
                     <td><span class="id-tag amber"><?= htmlspecialchars($g['ID_GAJI']) ?></span></td>
-                    <td style="font-weight:700"><?= htmlspecialchars($g['NAMA_PENJAHIT']) ?></td>
-                    <td style="font-weight:700;color:var(--p600)">Rp <?= number_format($g['TOTAL_UPAH']) ?></td>
+                    <td style="font-weight:700"><?= htmlspecialchars($g['NAMA_PENJAHIT'] ?? '— Penjahit Dihapus') ?></td>
+                    <td style="font-weight:700;color:var(--p600)">Rp <?= number_format($g['TOTAL_UPAH'] ?? 0) ?></td>
                     <td>
                         <span class="badge <?= $lunas ? 'badge-g' : 'badge-r' ?>">
                             <i class="bi bi-<?= $lunas ? 'check-circle-fill' : 'x-circle-fill' ?>"></i>
