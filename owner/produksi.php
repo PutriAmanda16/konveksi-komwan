@@ -50,14 +50,11 @@ if (isset($_POST['update_produksi'])) {
     $id_penjahit = mysqli_real_escape_string($koneksi, $_POST['id_penjahit']);
     $deadline    = mysqli_real_escape_string($koneksi, $_POST['deadline'] ?? '');
 
-    // Update status, penjahit, & deadline di tabel pesanan
     mysqli_query($koneksi,
         "UPDATE pesanan SET STATUS='$status', ID_PENJAHIT='$id_penjahit', DEADLINE='$deadline'
         WHERE ID_PESANAN='$id_pesanan'");
 
-    // Jika penjahit dipilih, pastikan baris di tabel produksi ada & ter-update
     if (!empty($id_penjahit)) {
-        // Ambil semua produk dari pesanan ini
         $q_detail = mysqli_query($koneksi,
             "SELECT dp.ID_PRODUK, dp.JUMLAH
              FROM detail_pesanan dp
@@ -67,14 +64,12 @@ if (isset($_POST['update_produksi'])) {
             $id_produk = mysqli_real_escape_string($koneksi, $dp['ID_PRODUK']);
             $jumlah    = (int)$dp['JUMLAH'];
 
-            // Cek apakah sudah ada baris produksi untuk pesanan+produk+penjahit ini
             $cek = mysqli_fetch_assoc(mysqli_query($koneksi,
                 "SELECT ID_PRODUKSI FROM produksi
                  WHERE ID_PRODUK='$id_produk' AND ID_PENJAHIT='$id_penjahit'
                  LIMIT 1"));
 
             if ($cek) {
-                // Update baris yang sudah ada
                 $id_prk = mysqli_real_escape_string($koneksi, $cek['ID_PRODUKSI']);
                 $dl_sql = !empty($deadline) ? ", DEADLINE='$deadline'" : "";
                 mysqli_query($koneksi,
@@ -84,7 +79,6 @@ if (isset($_POST['update_produksi'])) {
                         $dl_sql
                      WHERE ID_PRODUKSI = '$id_prk'");
             } else {
-                // Buat baris produksi baru
                 $last_prk = mysqli_fetch_assoc(mysqli_query($koneksi,
                     "SELECT ID_PRODUKSI FROM produksi
                      WHERE ID_PRODUKSI LIKE 'PRK%'
@@ -127,7 +121,7 @@ if (isset($_GET['hapus'])) {
 // =========================================================
 $notif_bayar = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'"));
 $notif_chat  = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as t FROM chat_sesi WHERE STATUS='eskalasi'"))['t'] ?? 0;
-$aset_rusak = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM aset"));
+$aset_rusak  = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM aset"));
 $stok_kritis = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM bahan_baku WHERE JUMLAH_STOK <= 25"));
 $total_notif = $notif_bayar + $notif_chat + $stok_kritis + $aset_rusak;
 
@@ -220,10 +214,6 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .tb-greeting{flex:1;}
 .tb-hello{font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
 .tb-sub{font-size:12px;color:var(--text3);font-weight:500;margin-top:1px;}
-.tb-nav{display:flex;align-items:center;gap:2px;}
-.tb-nav-item{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:600;color:var(--text2);text-decoration:none;transition:all var(--ease-plain);white-space:nowrap;border:1.5px solid transparent;}
-.tb-nav-item:hover{background:var(--p50);color:var(--p500);}
-.tb-divider{width:1px;height:24px;background:var(--border2);margin:0 4px;}
 .tb-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .icon-btn{width:36px;height:36px;border-radius:10px;background:var(--p50);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;color:var(--p500);font-size:16px;transition:all var(--ease);position:relative;}
 .icon-btn:hover{background:var(--p100);transform:scale(1.08);}
@@ -344,7 +334,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 </head>
 <body>
 
-<!-- SIDEBAR -->
+<!-- ══ SIDEBAR ══ -->
 <aside class="sidebar">
     <a href="dashboard.php" class="sb-brand">
         <div class="brand-mark"><i class="bi bi-scissors"></i></div>
@@ -364,7 +354,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
         <div class="nav-group-label">Menu Utama</div>
         <a href="dashboard.php"  class="nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a href="pesanan.php"    class="nav-item"><i class="bi bi-bag-heart"></i> Pesanan
-            <?php if($notif_bayar>0):?><span class="nav-pill pill-red"><?=$notif_bayar?></span><?php endif;?>
+            <?php if($notif_bayar > 0): ?>
+            <span class="nav-pill pill-red"><?=$notif_bayar?></span>
+            <?php endif; ?>
         </a>
         <a href="produksi.php"   class="nav-item active"><i class="bi bi-gear-fill"></i> Produksi</a>
         <a href="penggajian.php" class="nav-item"><i class="bi bi-cash-stack"></i> Penggajian</a>
@@ -372,13 +364,17 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
         <a href="kelola_produk.php"   class="nav-item"><i class="bi bi-box-seam"></i> Produk</a>
         <a href="kelola_penjahit.php" class="nav-item"><i class="bi bi-people"></i> Penjahit</a>
         <a href="bahan_baku.php"      class="nav-item"><i class="bi bi-archive"></i> Bahan Baku
-            <?php if($stok_kritis>0):?><span class="nav-pill pill-orange"><?=$stok_kritis?></span><?php endif;?>
+            <?php if($stok_kritis > 0): ?>
+            <span class="nav-pill pill-orange"><?=$stok_kritis?></span>
+            <?php endif; ?>
         </a>
-        <a href="aset.php"            class="nav-item"><i class="bi bi-tools"></i> Aset</a>
+        <a href="aset.php" class="nav-item"><i class="bi bi-tools"></i> Aset</a>
         <div class="nav-group-label">Laporan</div>
-        <a href="laporan.php"  class="nav-item"><i class="bi bi-bar-chart-line"></i> Laporan</a>
-        <a href="chat.php"     class="nav-item"><i class="bi bi-chat-dots"></i> Chat
-            <?php if($notif_chat>0):?><span class="nav-pill pill-pink"><?=$notif_chat?></span><?php endif;?>
+        <a href="laporan.php" class="nav-item"><i class="bi bi-bar-chart-line"></i> Laporan</a>
+        <a href="chat.php"    class="nav-item"><i class="bi bi-chat-dots"></i> Chat
+            <?php if($notif_chat > 0): ?>
+            <span class="nav-pill pill-pink"><?=$notif_chat?></span>
+            <?php endif; ?>
         </a>
     </nav>
     <div class="sb-footer">
@@ -386,252 +382,314 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     </div>
 </aside>
 
-<!-- TOPBAR -->
+<!-- ══ TOPBAR ══ -->
 <header class="topbar">
     <div class="tb-greeting">
         <div class="tb-hello">🏭 Manajemen Produksi</div>
         <div class="tb-sub"><?=date('l, d F Y')?></div>
     </div>
     <div class="tb-actions">
-        <?php if($total_notif>0):?>
+        <?php if($total_notif > 0): ?>
         <a href="#" class="icon-btn"><i class="bi bi-bell"></i><span class="dot"></span></a>
-        <?php endif;?>
+        <?php endif; ?>
         <div class="date-pill"><i class="bi bi-calendar3"></i><?=date('d/m/Y')?></div>
     </div>
 </header>
 
-<!-- TOAST -->
-<?php if($msg==='updated'):?>
+<!-- ══ TOAST ══ -->
+<?php if($msg === 'updated'): ?>
 <div class="toast-notif toast-success"><i class="bi bi-check-circle-fill"></i> Produksi berhasil diperbarui!</div>
-<?php elseif($msg==='deleted'):?>
+<?php elseif($msg === 'deleted'): ?>
 <div class="toast-notif toast-deleted"><i class="bi bi-trash3-fill"></i> Pesanan berhasil dihapus.</div>
-<?php endif;?>
+<?php endif; ?>
 
+<!-- ══ MAIN ══ -->
 <main class="main">
 <div class="content">
 
-<!-- Page Header -->
-<div class="page-hd anim">
-    <div class="page-title-wrap">
-        <div class="page-icon"><i class="bi bi-gear-fill"></i></div>
-        <div>
-            <div class="page-title">Produksi Aktif</div>
-            <div class="page-subtitle">Kelola status, penjahit & deadline pesanan berjalan</div>
+    <!-- Page Header -->
+    <div class="page-hd anim">
+        <div class="page-title-wrap">
+            <div class="page-icon"><i class="bi bi-gear-fill"></i></div>
+            <div>
+                <div class="page-title">Produksi Aktif</div>
+                <div class="page-subtitle">Kelola status, penjahit &amp; deadline pesanan berjalan</div>
+            </div>
+        </div>
+        <a href="dashboard.php" class="back-btn"><i class="bi bi-arrow-left"></i> Kembali</a>
+    </div>
+
+    <!-- Stat Strip -->
+    <div class="stat-strip anim">
+        <div class="stat-card sc-pink">
+            <div class="stat-ico" style="background:var(--p100);color:var(--p500)"><i class="bi bi-gear-fill"></i></div>
+            <div>
+                <div class="stat-lbl">Total Aktif</div>
+                <div class="stat-val" style="color:var(--p500)"><?=$total_produksi?></div>
+            </div>
+        </div>
+        <div class="stat-card sc-orange">
+            <div class="stat-ico" style="background:var(--a100);color:var(--a500)"><i class="bi bi-hourglass-split"></i></div>
+            <div>
+                <div class="stat-lbl">Pending</div>
+                <div class="stat-val" style="color:var(--a500)"><?=$total_pending?></div>
+            </div>
+        </div>
+        <div class="stat-card sc-blue">
+            <div class="stat-ico" style="background:var(--b100);color:var(--b500)"><i class="bi bi-arrow-repeat"></i></div>
+            <div>
+                <div class="stat-lbl">Proses</div>
+                <div class="stat-val" style="color:var(--b500)"><?=$total_proses?></div>
+            </div>
+        </div>
+        <div class="stat-card sc-green">
+            <div class="stat-ico" style="background:var(--g100);color:var(--g500)"><i class="bi bi-check-circle-fill"></i></div>
+            <div>
+                <div class="stat-lbl">Selesai</div>
+                <div class="stat-val" style="color:var(--g500)"><?=$total_selesai?></div>
+            </div>
         </div>
     </div>
-    <a href="dashboard.php" class="back-btn"><i class="bi bi-arrow-left"></i> Kembali</a>
-</div>
 
-<!-- Stat Strip -->
-<div class="stat-strip anim">
-    <div class="stat-card sc-pink">
-        <div class="stat-ico" style="background:var(--p100);color:var(--p500)"><i class="bi bi-gear-fill"></i></div>
-        <div><div class="stat-lbl">Total Aktif</div><div class="stat-val" style="color:var(--p500)"><?=$total_produksi?></div></div>
-    </div>
-    <div class="stat-card sc-orange">
-        <div class="stat-ico" style="background:var(--a100);color:var(--a500)"><i class="bi bi-hourglass-split"></i></div>
-        <div><div class="stat-lbl">Pending</div><div class="stat-val" style="color:var(--a500)"><?=$total_pending?></div></div>
-    </div>
-    <div class="stat-card sc-blue">
-        <div class="stat-ico" style="background:var(--b100);color:var(--b500)"><i class="bi bi-arrow-repeat"></i></div>
-        <div><div class="stat-lbl">Proses</div><div class="stat-val" style="color:var(--b500)"><?=$total_proses?></div></div>
-    </div>
-    <div class="stat-card sc-green">
-        <div class="stat-ico" style="background:var(--g100);color:var(--g500)"><i class="bi bi-check-circle-fill"></i></div>
-        <div><div class="stat-lbl">Selesai</div><div class="stat-val" style="color:var(--g500)"><?=$total_selesai?></div></div>
-    </div>
-</div>
+    <!-- Cards Grid -->
+    <?php
+    $has_data    = false;
+    $all_penjahit = [];
+    $q_pj = mysqli_query($koneksi, "SELECT ID_PENJAHIT, NAMA_PENJAHIT FROM penjahit ORDER BY NAMA_PENJAHIT ASC");
+    while ($pj = mysqli_fetch_assoc($q_pj)) $all_penjahit[] = $pj;
 
-<!-- Cards Grid -->
-<?php
-$has_data = false;
-$all_penjahit = [];
-$q_pj = mysqli_query($koneksi, "SELECT ID_PENJAHIT, NAMA_PENJAHIT FROM penjahit ORDER BY NAMA_PENJAHIT ASC");
-while($pj = mysqli_fetch_assoc($q_pj)) $all_penjahit[] = $pj;
+    $all_produk = [];
+    $q_pr = mysqli_query($koneksi, "SELECT ID_PRODUK, NAMA_PRODUK, HARGA FROM produk ORDER BY NAMA_PRODUK ASC");
+    while ($pr = mysqli_fetch_assoc($q_pr)) $all_produk[] = $pr;
+    ?>
 
-$all_produk = [];
-$q_pr = mysqli_query($koneksi, "SELECT ID_PRODUK, NAMA_PRODUK, HARGA FROM produk ORDER BY NAMA_PRODUK ASC");
-while($pr = mysqli_fetch_assoc($q_pr)) $all_produk[] = $pr;
-?>
-<div class="cards-grid">
+    <div class="cards-grid">
 
-<?php while($row = mysqli_fetch_assoc($query)):
-    $id_psn    = $row['ID_PESANAN'];
-    $nama_pel  = $row['NAMA_PELANGGAN'] ?? '';
-    $huruf     = strtoupper(substr($nama_pel,0,1));
-    $st        = $row['STATUS'] ?? 'Pending';
-    $has_data  = true;
-?>
-<div class="pesanan-card">
-<div class="card-top">
-    <span class="card-id"># <?=$id_psn?></span>
-    <div class="card-actions">
-        <span class="status-badge st-<?=strtolower($st)?>"><?=$st?></span>
-        <button class="act-btn act-edit" onclick="openModal('modal-<?=$id_psn?>')"><i class="bi bi-pencil"></i></button>
-        <form method="POST" style="display:inline" onsubmit="return confirm('Hapus pesanan ini?')">
-            <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
-            <button type="submit" name="hapus_pesanan" class="act-btn act-del"><i class="bi bi-trash3"></i></button>
-        </form>
-    </div>
-</div>
-<div class="card-body-inner">
-<div class="pelanggan-row">
-    <div class="pel-av" style="--clr:var(--p400)"><?=$huruf?></div>
+    <?php while ($row = mysqli_fetch_assoc($query)): ?>
+    <?php
+        $id_psn   = $row['ID_PESANAN'];
+        $nama_pel = $row['NAMA_PELANGGAN'] ?? '';
+        $huruf    = strtoupper(substr($nama_pel, 0, 1));
+        $st       = $row['STATUS'] ?? 'Pending';
+        $has_data = true;
+    ?>
+
+    <!-- ── Pesanan Card ── -->
+    <div class="pesanan-card">
+
+        <!-- Card Top -->
+        <div class="card-top">
+            <span class="card-id"># <?=$id_psn?></span>
+            <div class="card-actions">
+                <span class="status-badge st-<?=strtolower($st)?>"><?=$st?></span>
+                <button class="act-btn act-edit" onclick="openModal('modal-<?=$id_psn?>')">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <a href="produksi.php?hapus=<?=urlencode($id_psn)?>"
+                   class="act-btn act-del"
+                   onclick="return confirm('Hapus pesanan ini?')">
+                    <i class="bi bi-trash3"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body-inner">
+
+            <!-- Pelanggan -->
+            <div class="pelanggan-row">
+                <div class="pel-av" style="--clr:var(--p400)"><?=$huruf?></div>
                 <div>
                     <div class="pel-name"><?=htmlspecialchars($nama_pel)?></div>
-                    <div class="pel-date"><i class="bi bi-calendar3" style="font-size:10px"></i> <?=date('d F Y',strtotime($row['WAKTU_PESAN']))?></div>
+                    <div class="pel-date">
+                        <i class="bi bi-calendar3" style="font-size:10px"></i>
+                        <?=date('d F Y', strtotime($row['WAKTU_PESAN']))?>
+                    </div>
                 </div>
             </div>
 
+            <!-- Item Box -->
             <div class="item-box">
                 <div class="item-box-title"><i class="bi bi-list-check"></i> Rincian Item</div>
                 <?php
                 $q_item = mysqli_query($koneksi,
-                    "SELECT pr.NAMA_PRODUK, dp.* FROM detail_pesanan dp
-                    JOIN produk pr ON dp.ID_PRODUK = pr.ID_PRODUK
-                    WHERE dp.ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
-         
-                if($q_item && mysqli_num_rows($q_item) > 0):
-                    while($it = mysqli_fetch_assoc($q_item)): 
+                    "SELECT pr.NAMA_PRODUK, dp.*
+                     FROM detail_pesanan dp
+                     JOIN produk pr ON dp.ID_PRODUK = pr.ID_PRODUK
+                     WHERE dp.ID_PESANAN='" . mysqli_real_escape_string($koneksi, $id_psn) . "'");
+
+                if ($q_item && mysqli_num_rows($q_item) > 0):
+                    while ($it = mysqli_fetch_assoc($q_item)):
                 ?>
                 <div class="item-row">
                     <div>
                         <div class="item-name"><?=htmlspecialchars($it['NAMA_PRODUK'])?></div>
-                        <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> · <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs</div>
-            
-                        <div class="item-meta" style="color: var(--text2); font-style: italic; margin-top: 3px;">
-                            <i class="bi bi-info-circle"></i> Keterangan: <?=htmlspecialchars($row['KETERANGAN'] ?? $row['keterangan'] ?? 'Tidak ada keterangan')?>
+                        <div class="item-meta">
+                            Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> &middot;
+                            <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs
+                        </div>
+                        <div class="item-meta" style="color:var(--text2);font-style:italic;margin-top:3px;">
+                            <i class="bi bi-info-circle"></i>
+                            Keterangan: <?=htmlspecialchars($row['KETERANGAN'] ?? $row['keterangan'] ?? 'Tidak ada keterangan')?>
                         </div>
                     </div>
-                    <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'],0,',','.')?></div>
+                    <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'], 0, ',', '.')?></div>
                 </div>
-                <?php 
+                <?php
                     endwhile;
-                else: 
+                else:
                 ?>
-                <div style="color: var(--text3); font-style: italic; text-align: center; padding: 10px 0;">Belum ada item</div>
-                <?php 
-                endif; 
-                ?>
-            </div>
+                <div style="color:var(--text3);font-style:italic;text-align:center;padding:10px 0;">
+                    Belum ada item
+                </div>
+                <?php endif; ?>
+            </div><!-- /.item-box -->
 
+            <!-- Total -->
             <div class="total-row">
                 <span class="total-lbl"><i class="bi bi-receipt"></i> Total Harga</span>
-                <span class="total-val">Rp <?=number_format($row['TOTAL_HARGA']??0,0,',','.')?></span>
+                <span class="total-val">Rp <?=number_format($row['TOTAL_HARGA'] ?? 0, 0, ',', '.')?></span>
             </div>
-        </div>
 
+        </div><!-- /.card-body-inner -->
+
+        <!-- Card Form -->
         <div class="card-form">
             <form method="POST" action="">
                 <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
                 <div class="form-row-inline">
+
+                    <!-- Penjahit -->
                     <div class="form-grp">
                         <span class="form-lbl"><i class="bi bi-person-workspace"></i> Penjahit</span>
                         <select name="id_penjahit" class="form-sel">
                             <option value="">— Pilih Penjahit —</option>
-                            <?php
-                            foreach($all_penjahit as $pj):?>
-                            <option value="<?=$pj['ID_PENJAHIT']?>" <?=$row['ID_PENJAHIT']==$pj['ID_PENJAHIT']?'selected':''?>>
-                                 <?=htmlspecialchars($pj['NAMA_PENJAHIT'])?>
+                            <?php foreach ($all_penjahit as $pj): ?>
+                            <option value="<?=$pj['ID_PENJAHIT']?>"
+                                <?= $row['ID_PENJAHIT'] == $pj['ID_PENJAHIT'] ? 'selected' : '' ?>>
+                                <?=htmlspecialchars($pj['NAMA_PENJAHIT'])?>
                             </option>
-                            <?php endforeach;?>
+                            <?php endforeach; ?>
                         </select>
                     </div>
+
+                    <!-- Deadline -->
                     <div class="form-grp" style="max-width:150px">
                         <span class="form-lbl"><i class="bi bi-calendar-check"></i> Deadline</span>
                         <?php
-                        // Ambil deadline dari tabel produksi jika ada
                         $val_deadline = '';
-
                         if (!empty($row['ID_PENJAHIT'])) {
                             $q_dl = mysqli_query($koneksi,
-                                "SELECT DEADLINE
-                                FROM produksi
-                                WHERE ID_PENJAHIT='".mysqli_real_escape_string($koneksi,$row['ID_PENJAHIT'])."'
-                                LIMIT 1");
-
+                                "SELECT DEADLINE FROM produksi
+                                 WHERE ID_PENJAHIT='" . mysqli_real_escape_string($koneksi, $row['ID_PENJAHIT']) . "'
+                                 LIMIT 1");
                             if ($q_dl && mysqli_num_rows($q_dl) > 0) {
-                                $dl_row = mysqli_fetch_assoc($q_dl);
+                                $dl_row       = mysqli_fetch_assoc($q_dl);
                                 $val_deadline = $dl_row['DEADLINE'];
                             }
                         }
                         ?>
                         <input type="date" name="deadline" class="form-inp"
-                            value="<?=htmlspecialchars($row['DEADLINE'] ?? $row['deadline'] ?? $val_deadline)?>">
+                               value="<?=htmlspecialchars($row['DEADLINE'] ?? $row['deadline'] ?? $val_deadline)?>">
                     </div>
+
+                    <!-- Status -->
                     <div class="form-grp" style="max-width:130px">
                         <span class="form-lbl"><i class="bi bi-activity"></i> Status</span>
                         <select name="status" class="form-sel">
-                            <option value="Pending" <?=$st==='Pending'?'selected':''?>>⏳ Pending</option>
-                            <option value="Proses"  <?=$st==='Proses' ?'selected':''?>>🔄 Proses</option>
-                            <option value="Selesai" <?=$st==='Selesai'?'selected':''?>>✅ Selesai</option>
+                            <option value="Pending" <?= $st === 'Pending' ? 'selected' : '' ?>>⏳ Pending</option>
+                            <option value="Proses"  <?= $st === 'Proses'  ? 'selected' : '' ?>>🔄 Proses</option>
+                            <option value="Selesai" <?= $st === 'Selesai' ? 'selected' : '' ?>>✅ Selesai</option>
                         </select>
                     </div>
+
                     <button type="submit" name="update_produksi" class="update-btn">
                         <i class="bi bi-arrow-clockwise"></i> Update
                     </button>
+
                 </div>
             </form>
-        </div>
-    </div>
-    <?php endwhile;?>
+        </div><!-- /.card-form -->
 
-    <?php if(!$has_data):?>
+    </div><!-- /.pesanan-card -->
+
+    <?php endwhile; ?>
+
+    <?php if (!$has_data): ?>
     <div class="empty-wrap">
         <div class="empty-icon"><i class="bi bi-gear"></i></div>
         <div class="empty-title">Tidak ada produksi aktif 🎉</div>
         <div class="empty-sub">Semua pesanan sudah selesai atau belum ada pesanan masuk.</div>
     </div>
-    <?php endif;?>
+    <?php endif; ?>
 
-    </div></div>
+    </div><!-- /.cards-grid -->
+
+</div><!-- /.content -->
 </main>
 
+<!-- ══ MODALS EDIT ══ -->
 <?php
 mysqli_data_seek($query, 0);
-while($row = mysqli_fetch_assoc($query)):
+while ($row = mysqli_fetch_assoc($query)):
     $id_psn = $row['ID_PESANAN'];
-    $q_edit = mysqli_query($koneksi,"SELECT * FROM detail_pesanan WHERE ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
+    $q_edit = mysqli_query($koneksi,
+        "SELECT * FROM detail_pesanan WHERE ID_PESANAN='" . mysqli_real_escape_string($koneksi, $id_psn) . "'");
 ?>
 <div class="modal-overlay" id="modal-<?=$id_psn?>">
     <div class="modal-box">
+
         <div class="modal-hd">
-            <div class="modal-title"><i class="bi bi-pencil-square"></i> Edit Pesanan #<?=$id_psn?></div>
-            <button class="modal-close" onclick="closeModal('modal-<?=$id_psn?>')"><i class="bi bi-x-lg"></i></button>
+            <div class="modal-title">
+                <i class="bi bi-pencil-square"></i> Edit Pesanan #<?=$id_psn?>
+            </div>
+            <button class="modal-close" onclick="closeModal('modal-<?=$id_psn?>')">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
+
         <form method="POST" action="">
             <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
+
             <div class="modal-body">
                 <div class="m-form-group">
                     <label class="m-label"><i class="bi bi-calendar3"></i> Tanggal Pesan</label>
-                    <input type="date" name="tgl" class="m-control" value="<?=date('Y-m-d',strtotime($row['WAKTU_PESAN']))?>">
+                    <input type="date" name="tgl" class="m-control"
+                           value="<?=date('Y-m-d', strtotime($row['WAKTU_PESAN']))?>">
                 </div>
+
                 <div style="font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
                     <i class="bi bi-list-check" style="color:var(--p400)"></i> Item Pesanan
                 </div>
-                <?php while($ed=mysqli_fetch_assoc($q_edit)):?>
+
+                <?php while ($ed = mysqli_fetch_assoc($q_edit)): ?>
                 <div class="item-edit-row">
                     <div>
                         <label>Produk</label>
                         <select name="id_produk[]" class="m-control">
-                            <?php foreach($all_produk as $p):?>
-                            <option value="<?=$p['ID_PRODUK']?>" <?=$ed['ID_PRODUK']==$p['ID_PRODUK']?'selected':''?>>
+                            <?php foreach ($all_produk as $p): ?>
+                            <option value="<?=$p['ID_PRODUK']?>"
+                                <?= $ed['ID_PRODUK'] == $p['ID_PRODUK'] ? 'selected' : '' ?>>
                                 <?=htmlspecialchars($p['NAMA_PRODUK'])?>
                             </option>
-                            <?php endforeach;?>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     <div>
                         <label>Ukuran</label>
-                        <input type="text" name="ukuran[]" class="m-control" value="<?=htmlspecialchars($ed['UKURAN'])?>" placeholder="S/M/L/XL">
+                        <input type="text" name="ukuran[]" class="m-control"
+                               value="<?=htmlspecialchars($ed['UKURAN'])?>" placeholder="S/M/L/XL">
                     </div>
                     <div>
                         <label>Jumlah</label>
-                        <input type="number" name="jumlah[]" class="m-control" value="<?=htmlspecialchars($ed['JUMLAH'])?>" min="1">
+                        <input type="number" name="jumlah[]" class="m-control"
+                               value="<?=htmlspecialchars($ed['JUMLAH'])?>" min="1">
                     </div>
                 </div>
-                <?php endwhile;?>
-            </div>
+                <?php endwhile; ?>
+
+            </div><!-- /.modal-body -->
+
             <div class="modal-footer">
                 <button type="button" class="modal-cancel-btn" onclick="closeModal('modal-<?=$id_psn?>')">
                     <i class="bi bi-x"></i> Batal
@@ -640,10 +698,11 @@ while($row = mysqli_fetch_assoc($query)):
                     <i class="bi bi-floppy-fill"></i> Simpan Perubahan
                 </button>
             </div>
+
         </form>
-    </div>
-</div>
-<?php endwhile;?>
+    </div><!-- /.modal-box -->
+</div><!-- /.modal-overlay -->
+<?php endwhile; ?>
 
 <script>
 function openModal(id) {
@@ -654,13 +713,11 @@ function closeModal(id) {
     document.getElementById(id).classList.remove('open');
     document.body.style.overflow = '';
 }
-// Close on backdrop click
 document.querySelectorAll('.modal-overlay').forEach(function(el) {
     el.addEventListener('click', function(e) {
         if (e.target === el) closeModal(el.id);
     });
 });
-// Auto hide toast
 setTimeout(function() {
     var t = document.querySelector('.toast-notif');
     if (t) t.style.display = 'none';
