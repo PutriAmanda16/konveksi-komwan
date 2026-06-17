@@ -51,9 +51,10 @@ if (isset($_POST['update_produksi'])) {
     $deadline    = mysqli_real_escape_string($koneksi, $_POST['deadline'] ?? '');
 
     // Update status & penjahit di tabel pesanan
+    // Update status, penjahit, & deadline di tabel pesanan
     mysqli_query($koneksi,
-        "UPDATE pesanan SET STATUS='$status', ID_PENJAHIT='$id_penjahit'
-         WHERE ID_PESANAN='$id_pesanan'");
+        "UPDATE pesanan SET STATUS='$status', ID_PENJAHIT='$id_penjahit', DEADLINE='$deadline'
+        WHERE ID_PESANAN='$id_pesanan'");
 
     // Jika penjahit dipilih, pastikan baris di tabel produksi ada & ter-update
     if (!empty($id_penjahit)) {
@@ -540,17 +541,21 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <?php
                 $q_item = mysqli_query($koneksi,
                     "SELECT pr.NAMA_PRODUK, dp.* FROM detail_pesanan dp
-                     JOIN produk pr ON dp.ID_PRODUK = pr.ID_PRODUK
-                     WHERE dp.ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
+                    JOIN produk pr ON dp.ID_PRODUK = pr.ID_PRODUK
+                    WHERE dp.ID_PESANAN='".mysqli_real_escape_string($koneksi,$id_psn)."'");
                 if($q_item && mysqli_num_rows($q_item)>0):
                     while($it=mysqli_fetch_assoc($q_item)):?>
                 <div class="item-row">
-                    <div>
-                        <div class="item-name"><?=htmlspecialchars($it['NAMA_PRODUK'])?></div>
-                        <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> · <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs</div>
-                    </div>
-                    <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'],0,',','.')?></div>
+                <div>
+                    <div class="item-name"><?=htmlspecialchars($it['NAMA_PRODUK'])?></div>
+                    <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> · <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs</div>
+                    <div class="item-meta" style="color: var(--text2); font-style: italic; margin-top: 3px;">
+                        <i class="bi bi-info-circle"></i> Keterangan: <?=htmlspecialchars($row['KETERANGAN'] ?? $row['keterangan'] ?? 'Tidak ada keterangan')?>
                 </div>
+            </div>
+            <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'],0,',','.')?></div>
+        </div>
+        <?php endwhile;
                 <?php endwhile;
                 else:?>
                 <div style="font-size:13px;color:var(--text3);text-align:center;padding:8px 0">Belum ada item</div>
@@ -601,8 +606,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         }
                         ?>
                         <input type="date" name="deadline" class="form-inp"
-                            value="<?=htmlspecialchars($val_deadline)?>"
-                            min="<?=date('Y-m-d')?>">
+                            value="<?=htmlspecialchars($row['DEADLINE'] ?? $row['deadline'] ?? $val_deadline)?>">
                     </div>
                     <div class="form-grp" style="max-width:130px">
                         <span class="form-lbl"><i class="bi bi-activity"></i> Status</span>
