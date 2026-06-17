@@ -55,17 +55,56 @@ if (isset($_POST['update_produksi'])) {
         "UPDATE pesanan SET STATUS='$status', ID_PENJAHIT='$id_penjahit'
          WHERE ID_PESANAN='$id_pesanan'");
 
-    // Simpan deadline ke tabel produksi (jika baris produksi untuk pesanan ini ada)
-    if (!empty($deadline)) {
-        mysqli_query($koneksi,
-            "UPDATE produksi SET DEADLINE='$deadline'
-             WHERE ID_PRODUKSI IN (
-                 SELECT ID_PRODUKSI FROM (
-                     SELECT p.ID_PRODUKSI FROM produksi p
-                     JOIN detail_pesanan dp ON p.ID_PRODUK = dp.ID_PRODUK
-                     WHERE dp.ID_PESANAN = '$id_pesanan'
-                 ) AS tmp
-             )");
+    // Jika penjahit dipilih, pastikan baris di tabel produksi ada & ter-update
+    if (!empty($id_penjahit)) {
+        // Ambil semua produk dari pesanan ini
+        $q_detail = mysqli_query($koneksi,
+            "SELECT dp.ID_PRODUK, dp.JUMLAH
+             FROM detail_pesanan dp
+             WHERE dp.ID_PESANAN = '$id_pesanan'");
+
+        while ($dp = mysqli_fetch_assoc($q_detail)) {
+            $id_produk = mysqli_real_escape_string($koneksi, $dp['ID_PRODUK']);
+            $jumlah    = (int)$dp['JUMLAH'];
+
+            // Cek apakah sudah ada baris produksi untuk pesanan+produk+penjahit ini
+            $cek = mysqli_fetch_assoc(mysqli_query($koneksi,
+                "SELECT ID_PRODUKSI FROM produksi
+                 WHERE ID_PRODUK='$id_produk' AND ID_PENJAHIT='$id_penjahit'
+                 LIMIT 1"));
+
+            if ($cek) {
+                // Update baris yang sudah ada
+                $id_prk = mysqli_real_escape_string($koneksi, $cek['ID_PRODUKSI']);
+                $dl_sql = !empty($deadline) ? ", DEADLINE='$deadline'" : "";
+                mysqli_query($koneksi,
+                    "UPDATE produksi SET
+                        STATUS_PRODUKSI   = '$status',
+                        JUMLAH_DIPRODUKSI = '$jumlah'
+                        $dl_sql
+                     WHERE ID_PRODUKSI = '$id_prk'");
+            } else {
+                // Buat baris produksi baru
+                $last_prk = mysqli_fetch_assoc(mysqli_query($koneksi,
+                    "SELECT ID_PRODUKSI FROM produksi
+                     WHERE ID_PRODUKSI LIKE 'PRK%'
+                     ORDER BY ID_PRODUKSI DESC LIMIT 1"));
+                $num_baru = $last_prk
+                    ? (int)substr($last_prk['ID_PRODUKSI'], 3) + 1
+                    : 1;
+                $id_baru  = 'PRK' . str_pad($num_baru, 2, '0', STR_PAD_LEFT);
+
+                $tgl_mulai = date('Y-m-d');
+                $dl_val    = !empty($deadline) ? "'$deadline'" : "NULL";
+                mysqli_query($koneksi,
+                    "INSERT INTO produksi
+                        (ID_PRODUKSI, ID_PRODUK, ID_PENJAHIT, STATUS_PRODUKSI,
+                         TANGGAL_MULAI, TANGGAL_SELESAI, JUMLAH_DIPRODUKSI, DEADLINE)
+                     VALUES
+                        ('$id_baru', '$id_produk', '$id_penjahit', '$status',
+                         '$tgl_mulai', '$tgl_mulai', '$jumlah', $dl_val)");
+            }
+        }
     }
 
     header("Location: produksi.php?msg=updated");
@@ -508,7 +547,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <div class="item-row">
                     <div>
                         <div class="item-name"><?=htmlspecialchars($it['NAMA_PRODUK'])?></div>
-                        <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'])?> · <?=htmlspecialchars($it['JUMLAH'])?> pcs</div>
+                        <div class="item-meta">Ukuran: <?=htmlspecialchars($it['UKURAN'] ?? '-')?> · <?=htmlspecialchars((string)($it['JUMLAH'] ?? ''))?> pcs</div>
                     </div>
                     <div class="item-sub">Rp <?=number_format($it['SUBTOTAL'],0,',','.')?></div>
                 </div>
