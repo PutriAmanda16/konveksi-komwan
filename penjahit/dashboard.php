@@ -24,50 +24,58 @@ $q_total             = mysqli_query($koneksi, "SELECT SUM(JUMLAH_DIPRODUKSI) as 
 $d_total             = mysqli_fetch_assoc($q_total);
 $total_upah_akumulasi = ($d_total['total_pcs'] ?? 0) * $upah_satuan;
 
-$q_ambil   = mysqli_query($koneksi, "SELECT SUM(JUMLAH_GAJI) as total_ambil FROM penggajian WHERE ID_PRODUKSI IN (SELECT ID_PRODUKSI FROM produksi WHERE ID_PENJAHIT = '$id_penjahit') AND STATUS_TERIMA = 'Selesai'");
-$d_ambil   = mysqli_fetch_assoc($q_ambil);
-$upah_telah_diambil = $d_ambil['total_ambil'] ?? 0;
+$q_notif    = mysqli_query($koneksi, "SELECT COUNT(*) as jml FROM produksi p JOIN penggajian g ON p.ID_PRODUKSI = g.ID_PRODUKSI WHERE p.ID_PENJAHIT = '$id_penjahit' AND g.BUKTI_BAYAR IS NOT NULL AND g.BUKTI_BAYAR != '' AND (g.STATUS_TERIMA IS NULL OR g.STATUS_TERIMA = 'Belum')");
+$d_notif    = mysqli_fetch_assoc($q_notif);
+$jumlah_notif = (int)($d_notif['jml'] ?? 0);
 
-$upah_tersedia = $total_upah_akumulasi - $upah_telah_diambil;
-if ($upah_tersedia < 0) $upah_tersedia = 0;
+$q_selesai  = mysqli_query($koneksi, "SELECT COUNT(*) as t FROM produksi WHERE ID_PENJAHIT='$id_penjahit' AND STATUS_PRODUKSI='Selesai'");
+$total_selesai = mysqli_fetch_assoc($q_selesai)['t'] ?? 0;
 
-$stat_tugas_baru = mysqli_num_rows(mysqli_query($koneksi, "SELECT ID_PRODUKSI FROM produksi WHERE ID_PENJAHIT = '$id_penjahit' AND STATUS_PRODUKSI = 'Belum Dimulai'"));
-$stat_proses     = mysqli_num_rows(mysqli_query($koneksi, "SELECT ID_PRODUKSI FROM produksi WHERE ID_PENJAHIT = '$id_penjahit' AND STATUS_PRODUKSI = 'Sedang Diproses'"));
-$stat_selesai    = mysqli_num_rows(mysqli_query($koneksi, "SELECT ID_PRODUKSI FROM produksi WHERE ID_PENJAHIT = '$id_penjahit' AND STATUS_PRODUKSI = 'Selesai'"));
-$stat_komplain   = mysqli_num_rows(mysqli_query($koneksi, "SELECT ID_PRODUKSI FROM produksi WHERE ID_PENJAHIT = '$id_penjahit' AND STATUS_PRODUKSI = 'Komplain/Revisi'"));
+$q_proses   = mysqli_query($koneksi, "SELECT COUNT(*) as t FROM produksi WHERE ID_PENJAHIT='$id_penjahit' AND STATUS_PRODUKSI='Proses'");
+$total_proses = mysqli_fetch_assoc($q_proses)['t'] ?? 0;
 
-// Mengubah status produksi jika ada post dari form update status produksi
-if (isset($_POST['update_status'])) {
-    $id_prod  = mysqli_real_escape_string($koneksi, $_POST['id_produksi']);
-    $st_baru  = mysqli_real_escape_string($koneksi, $_POST['status_produksi']);
-    $ket_baru = mysqli_real_escape_string($koneksi, $_POST['keterangan']);
-    $kl_baru  = mysqli_real_escape_string($koneksi, $_POST['kualitas_produksi']);
-    
-    mysqli_query($koneksi, "UPDATE produksi SET STATUS_PRODUKSI = '$st_baru', KETERANGAN = '$ket_baru', KUALITAS_PRODUKSI = '$kl_baru' WHERE ID_PRODUKSI = '$id_prod' AND ID_PENJAHIT = '$id_penjahit'");
-    header("Location: dashboard.php");
-    exit;
-}
+$q_lunas    = mysqli_query($koneksi, "SELECT COUNT(*) as t FROM produksi p JOIN penggajian g ON p.ID_PRODUKSI=g.ID_PRODUKSI WHERE p.ID_PENJAHIT='$id_penjahit' AND g.STATUS_TERIMA='Diterima'");
+$total_lunas = mysqli_fetch_assoc($q_lunas)['t'] ?? 0;
 
-// Menambahkan komplain jika ada post dari form komplain
-if (isset($_POST['kirim_komplain'])) {
-    $id_prod  = mysqli_real_escape_string($koneksi, $_POST['id_produksi']);
-    $cat_baru = mysqli_real_escape_string($koneksi, $_POST['catatan_komplain']);
-    
-    mysqli_query($koneksi, "UPDATE produksi SET STATUS_PRODUKSI = 'Komplain/Revisi', KETERANGAN = '$cat_baru' WHERE ID_PRODUKSI = '$id_prod' AND ID_PENJAHIT = '$id_penjahit'");
-    header("Location: dashboard.php?sukses=1");
+if (isset($_POST['komplain'])) {
+    $id_komplain    = mysqli_real_escape_string($koneksi, $_POST['id_produksi_komplain']);
+    $catatan        = mysqli_real_escape_string($koneksi, $_POST['catatan_komplain']);
+    $waktu_komplain = date('Y-m-d H:i:s');
+// Cek dulu apakah kolom sudah ada
+    $cek_col = mysqli_query($koneksi, "SHOW COLUMNS FROM penggajian LIKE 'BUKTI_KOMPLAIN'");
+    if (mysqli_num_rows($cek_col) == 0) {
+        mysqli_query($koneksi, "ALTER TABLE penggajian ADD COLUMN BUKTI_KOMPLAIN VARCHAR(255) NULL");
+    }
+    $nama_bukti_komplain = '';
+    if (!empty($_FILES['bukti_komplain']['name'])) {
+        $folder_komplain = "../assets/bukti_gaji/komplain/";
+        if (!is_dir($folder_komplain)) mkdir($folder_komplain, 0755, true);
+        $ext       = pathinfo($_FILES['bukti_komplain']['name'], PATHINFO_EXTENSION);
+        $nama_file = 'komplain_' . $id_komplain . '_' . time() . '.' . $ext;
+        move_uploaded_file($_FILES['bukti_komplain']['tmp_name'], $folder_komplain . $nama_file);
+        $nama_bukti_komplain = mysqli_real_escape_string($koneksi, $nama_file);
+    }
+
+    $cek = mysqli_query($koneksi, "SELECT ID_PRODUKSI FROM penggajian WHERE ID_PRODUKSI = '$id_komplain'");
+    if (mysqli_num_rows($cek) == 0) {
+        mysqli_query($koneksi, "INSERT INTO penggajian (ID_PRODUKSI, STATUS_TERIMA, CATATAN_KOMPLAIN, BUKTI_KOMPLAIN, TANGGAL_KOMPLAIN, STATUS_KOMPLAIN) VALUES ('$id_komplain', 'Belum', '$catatan', '$nama_bukti_komplain', '$waktu_komplain', 'Menunggu')");
+    } else {
+        $set_bukti = $nama_bukti_komplain ? ", BUKTI_KOMPLAIN = '$nama_bukti_komplain'" : "";
+        mysqli_query($koneksi, "UPDATE penggajian SET CATATAN_KOMPLAIN='$catatan', TANGGAL_KOMPLAIN='$waktu_komplain', STATUS_KOMPLAIN='Menunggu' $set_bukti WHERE ID_PRODUKSI='$id_komplain'");
+    }
+    header("Location: dashboard.php?sukses=komplain");
     exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Penjahit 🧵 | Konveksi Apps</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Penjahit 🧵 | Konveksi Apps</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-<style>
 /* ── DEADLINE BADGE ── */
 .dl-aman   { background:var(--g100);  color:var(--g700);  border:1px solid rgba(34,197,94,0.25); }
 .dl-mepet  { background:var(--a100);  color:var(--a700);  border:1px solid rgba(234,179,8,0.25); }
@@ -79,6 +87,7 @@ if (isset($_POST['kirim_komplain'])) {
     font-size:12px; font-weight:700; white-space:nowrap;
 }
 
+<style>
 :root {
     --p50:#fff0f5; --p100:#ffd6e7; --p200:#ffadd0; --p300:#ff80b8;
     --p400:#f950a0; --p500:#e8328a; --p600:#cc1a73; --p700:#a8105d;
@@ -249,287 +258,334 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 </head>
 <body>
 
-    <aside class="sidebar">
-        <a href="dashboard.php" class="sb-brand">
-            <div class="brand-mark"><i class="bi bi-scissors"></i></div>
-            <div>
-                <div class="brand-name">Konveksi Apps</div>
-                <div class="brand-sub">Penjahit Hub</div>
-            </div>
+<!-- ════ SIDEBAR ════ -->
+<aside class="sidebar">
+    <a href="dashboard.php" class="sb-brand">
+        <div class="brand-mark"><i class="bi bi-scissors"></i></div>
+        <div><div class="brand-name">Konveksi Apps</div><div class="brand-sub">Panel Penjahit</div></div>
+    </a>
+
+    <!-- Upah card -->
+    <div class="sb-upah">
+        <div class="sb-upah-label">Upah per Item</div>
+        <div class="sb-upah-val">Rp <?= number_format($upah_satuan) ?></div>
+        <hr class="sb-upah-divider">
+        <div class="sb-upah-note">Total Saldo Upah</div>
+        <div class="sb-upah-total">Rp <?= number_format($total_upah_akumulasi) ?></div>
+    </div>
+
+    <nav class="sb-nav">
+        <a class="nav-item active" href="dashboard.php">
+            <i class="bi bi-grid-1x2-fill"></i> Dashboard
+            <?php if($jumlah_notif > 0): ?>
+            <span class="nav-pill pill-red pulse"><?= $jumlah_notif ?></span>
+            <?php endif; ?>
         </a>
-        
-        <div class="sb-upah">
-            <div class="sb-upah-label">Upah Tersedia</div>
-            <div class="sb-upah-val">Rp <?= number_format($upah_tersedia) ?></div>
-            <hr class="sb-upah-divider">
-            <div class="sb-upah-note">Akumulasi Pendapatan</div>
-            <div class="sb-upah-total">Rp <?= number_format($total_upah_akumulasi) ?></div>
+    </nav>
+
+    <div class="sb-footer">
+        <a class="nav-item logout" href="../auth/logout.php"><i class="bi bi-box-arrow-left"></i> Keluar</a>
+    </div>
+</aside>
+
+<!-- ════ TOPBAR ════ -->
+<header class="topbar">
+    <div class="tb-greeting">
+        <div class="tb-hello">Halo, <?= htmlspecialchars($nama_penjahit) ?>! 🌸</div>
+        <div class="tb-sub">Pantau produksi dan upah kamu di sini 💪</div>
+    </div>
+    <div class="tb-actions">
+        <?php if($jumlah_notif > 0): ?>
+        <div class="icon-btn">
+            <i class="bi bi-bell-fill"></i>
+            <span class="dot"></span>
         </div>
+        <?php endif; ?>
+        <div class="date-pill"><i class="bi bi-calendar-heart"></i> <?= date('d M Y') ?></div>
+    </div>
+</header>
 
-        <nav class="sb-nav">
-            <div class="nav-group-label">Menu Utama</div>
-            <a href="dashboard.php" class="nav-item active">
-                <i class="bi bi-grid-1x2-fill"></i> Tugas Produksi
-                <?php if($stat_tugas_baru > 0): ?>
-                    <span class="nav-pill pill-red pulse"><?= $stat_tugas_baru ?></span>
-                <?php endif; ?>
-            </a>
-            <a href="riwayat_gaji.php" class="nav-item">
-                <i class="bi bi-cash-stack"></i> Riwayat Gaji
-            </a>
-            
-            <div class="nav-group-label">Sistem</div>
-            <a href="../logout.php" class="nav-item logout">
-                <i class="bi bi-box-arrow-left"></i> Keluar Akun
-            </a>
-        </nav>
-        
-        <div class="sb-footer">
-            <div class="nav-item" style="background:var(--p50); border-radius:12px; padding:10px; cursor:default; transform:none">
-                <div class="brand-mark" style="width:32px; height:32px; font-size:13px; box-shadow:none"><?= $inisial ?></div>
-                <div style="overflow:hidden">
-                    <div style="font-weight:700; font-size:13px; text-overflow:ellipsis; white-space:nowrap; color:var(--text)"><?= htmlspecialchars($nama_penjahit) ?></div>
-                    <div style="font-size:10px; color:var(--text3); font-weight:700; text-transform:uppercase">Penjahit Aktif</div>
-                </div>
-            </div>
+<!-- ════ MAIN ════ -->
+<main class="main">
+<div class="content">
+
+    <!-- NOTIF BANNER -->
+    <?php if($jumlah_notif > 0): ?>
+    <div class="alert-banner a-pink">
+        <div class="ab-ico"><i class="bi bi-cash-coin"></i></div>
+        <div class="ab-text">
+            <b><?= $jumlah_notif ?> gaji baru</b> sudah dikirim oleh owner! Cek tabel di bawah dan klik
+            <b>Konfirmasi Terima</b> untuk menyelesaikan.
         </div>
-    </aside>
+        <a href="#tabel-produksi" class="ab-btn">Lihat Sekarang <i class="bi bi-arrow-down"></i></a>
+    </div>
+    <?php endif; ?>
 
-    <header class="topbar">
-        <div class="tb-greeting">
-            <div class="tb-hello">Semangat Bekerja, <?= explode(' ', $nama_penjahit)[0] ?>! 👋🏻</div>
-            <div class="tb-sub">Kelola lembar tugas produksi dan pantau progres jahitanmu hari ini.</div>
+    <!-- STAT CARDS -->
+    <div class="stat-grid">
+        <div class="stat-card" style="animation-delay:.05s">
+            <div class="stat-stripe" style="background:linear-gradient(90deg,var(--p500),var(--p300))"></div>
+            <div class="stat-ico" style="background:var(--p50);color:var(--p500)"><i class="bi bi-cash-coin"></i></div>
+            <div class="stat-label">Upah per Item</div>
+            <div class="stat-val" style="color:var(--p600)">Rp <?= number_format($upah_satuan) ?></div>
+            <div class="stat-note">Tarif per unit produksi</div>
+            <div class="stat-blob" style="background:var(--p500)"></div>
         </div>
-        <div class="tb-actions">
-            <?php if($stat_komplain > 0): ?>
-                <a href="dashboard.php" class="icon-btn" title="Ada komplain jahit">
-                    <i class="bi bi-exclamation-circle-fill" style="color:var(--r500)"></i>
-                    <span class="dot"></span>
-                </a>
-            <?php endif; ?>
-            <div class="date-pill">
-                <i class="bi bi-calendar3"></i>
-                <span><?= date('d M Y') ?></span>
-            </div>
+        <div class="stat-card" style="animation-delay:.1s">
+            <div class="stat-stripe" style="background:linear-gradient(90deg,var(--g500),#86efac)"></div>
+            <div class="stat-ico" style="background:var(--g100);color:var(--g500)"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-label">Produksi Selesai</div>
+            <div class="stat-val" style="color:var(--g700)"><?= $total_selesai ?> <span style="font-size:13px">tugas</span></div>
+            <div class="stat-note">Total yang sudah rampung</div>
+            <div class="stat-blob" style="background:var(--g500)"></div>
         </div>
-    </header>
-
-    <main class="main">
-        <div class="content">
-            
-            <?php if($stat_komplain > 0): ?>
-            <div class="alert-banner a-pink">
-                <div class="ab-ico"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                <div class="ab-text">Perhatian! Anda memiliki <b><?= $stat_komplain ?> pesanan yang membutuhkan revisi/komplain</b> dari owner. Mohon segera diperiksa dan diperbaiki.</div>
-            </div>
-            <?php endif; ?>
-
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <div class="stat-stripe" style="background:var(--p400)"></div>
-                    <div class="stat-blob" style="background:var(--p500)"></div>
-                    <div class="stat-ico" style="background:var(--p50); color:var(--p500)"><i class="bi bi-folder-plus"></i></div>
-                    <div class="stat-label">Tugas Baru</div>
-                    <div class="stat-val" style="color:var(--text)"><?= $stat_tugas_baru ?></div>
-                    <div class="stat-note">Belum disentuh</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-stripe" style="background:var(--b500)"></div>
-                    <div class="stat-blob" style="background:var(--b500)"></div>
-                    <div class="stat-ico" style="background:var(--b100); color:var(--b700)"><i class="bi bi-cone-striped"></i></div>
-                    <div class="stat-label">Sedang Jahit</div>
-                    <div class="stat-val" style="color:var(--b700)"><?= $stat_proses ?></div>
-                    <div class="stat-note">Progres aktif</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-stripe" style="background:var(--r500)"></div>
-                    <div class="stat-blob" style="background:var(--r500)"></div>
-                    <div class="stat-ico" style="background:var(--r100); color:var(--r700)"><i class="bi bi-patch-exclamation"></i></div>
-                    <div class="stat-label">Komplain / Revisi</div>
-                    <div class="stat-val" style="color:var(--r700)"><?= $stat_komplain ?></div>
-                    <div class="stat-note">Butuh perbaikan</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-stripe" style="background:var(--g500)"></div>
-                    <div class="stat-blob" style="background:var(--g500)"></div>
-                    <div class="stat-ico" style="background:var(--g100); color:var(--g700)"><i class="bi bi-check2-circle"></i></div>
-                    <div class="stat-label">Selesai</div>
-                    <div class="stat-val" style="color:var(--g700)"><?= $stat_selesai ?></div>
-                    <div class="stat-note">Menunggu upah cair</div>
-                </div>
-            </div>
-
-            <div class="sec-hd">
-                <div class="sec-title"><span class="sec-dot"></span> Daftar Pekerjaan Jahit Anda</div>
-            </div>
-
-            <div class="tbl-card">
-                <div class="tbl-hd">
-                    <div class="tbl-hd-title"><i class="bi bi-list-task"></i> Manajemen Progres Produksi</div>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID Prod</th>
-                            <th>Pesanan / Produk</th>
-                            <th>Jumlah</th>
-                            <th>Upah / Pcs</th>
-                            <th>Estimasi Upah</th>
-                            <th>Status Kerja</th>
-                            <th>Batas Waktu</th>
-                            <th style="text-align:center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $q_list = mysqli_query($koneksi, "
-                            SELECT pr.*, ps.NAMA_PESANAN, ps.TANGGAL_SELESAI as deadline
-                            FROM produksi pr
-                            JOIN pesanan ps ON pr.ID_PESANAN = ps.ID_PESANAN
-                            WHERE pr.ID_PENJAHIT = '$id_penjahit'
-                            ORDER BY 
-                                CASE pr.STATUS_PRODUKSI
-                                    WHEN 'Komplain/Revisi' THEN 1
-                                    WHEN 'Belum Dimulai' THEN 2
-                                    WHEN 'Sedang Diproses' THEN 3
-                                    ELSE 4
-                                END ASC,
-                                ps.TANGGAL_SELESAI ASC
-                        ");
-                        
-                        if (mysqli_num_rows($q_list) > 0):
-                            while ($r = mysqli_fetch_assoc($q_list)):
-                                $est_upah = $r['JUMLAH_DIPRODUKSI'] * $upah_satuan;
-                                
-                                // Color map status produksi
-                                $st = $r['STATUS_PRODUKSI'];
-                                if ($st == 'Belum Dimulai') { $s_cls = 'bp-pink'; }
-                                elseif ($st == 'Sedang Diproses') { $s_cls = 'bp-blue'; }
-                                elseif ($st == 'Komplain/Revisi') { $s_cls = 'bp-red pulse'; }
-                                else { $s_cls = 'bp-green'; }
-                                
-                                // Kalkulasi deadline pill badge
-                                $dl_badge = 'dl-none'; $dl_txt = 'Tidak ada';
-                                if(!empty($r['deadline'])) {
-                                    $tgl_dl = strtotime($r['deadline']);
-                                    $skrg   = time();
-                                    $diff   = ($tgl_dl - $skrg) / (60 * 60 * 24); // Hari
-                                    
-                                    $dl_txt = date('d/m/Y', $tgl_dl);
-                                    if ($diff < 0) { $dl_badge = 'dl-lewat'; $dl_txt .= ' (Terlambat)'; }
-                                    elseif ($diff <= 2) { $dl_badge = 'dl-mepet'; $dl_txt .= ' (Mepet!)'; }
-                                    else { $dl_badge = 'dl-aman'; }
-                                }
-                        ?>
-                        <tr>
-                            <td><span class="id-tag"><?= htmlspecialchars($r['ID_PRODUKSI']) ?></span></td>
-                            <td>
-                                <div style="font-weight:700; color:var(--text)"><?= htmlspecialchars($r['NAMA_PESANAN']) ?></div>
-                                <span class="timestamp-sm">ID Pesanan: <?= htmlspecialchars($r['ID_PESANAN']) ?></span>
-                            </td>
-                            <td style="font-weight:700"><?= number_format($r['JUMLAH_DIPRODUKSI']) ?> <span style="font-size:11px; color:var(--text3)">Pcs</span></td>
-                            <td style="color:var(--text2)">Rp <?= number_format($upah_satuan) ?></td>
-                            <td style="font-weight:700; color:var(--g700)">Rp <?= number_format($est_upah) ?></td>
-                            <td><span class="badge-pill <?= $s_cls ?>"><?= htmlspecialchars($st) ?></span></td>
-                            <td><span class="deadline-pill <?= $dl_badge ?>"><i class="bi bi-clock-history"></i> <?= $dl_txt ?></span></td>
-                            <td style="text-align:center">
-                                <?php if($st != 'Selesai'): ?>
-                                    <button class="btn-aksi btn-update" onclick="bukaModalUpdate('<?= $r['ID_PRODUKSI'] ?>', '<?= $st ?>', '<?= htmlspecialchars($r['KETERANGAN'] ?? '', ENT_QUOTES) ?>', '<?= htmlspecialchars($r['KUALITAS_PRODUKSI'] ?? 'baik', ENT_QUOTES) ?>')">
-                                        <i class="bi bi-pencil-square"></i> Update Status
-                                    </button>
-                                <?php else: ?>
-                                    <button class="btn-aksi btn-nota" onclick="bukaModalKomplain('<?= $r['ID_PRODUKSI'] ?>', '<?= htmlspecialchars($r['KETERANGAN'] ?? '', ENT_QUOTES) ?>')">
-                                        <i class="bi bi-chat-right-text"></i> Komplain Baru
-                                    </button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php 
-                            endwhile;
-                        else: 
-                        ?>
-                        <tr>
-                            <td colspan="8" style="text-align:center; padding:40px 20px; color:var(--text3)">
-                                <div style="font-size:32px; margin-bottom:8px">🌸</div>
-                                <div style="font-weight:700; font-size:15px">Hore! Belum Ada Tugas Jahit</div>
-                                <div style="font-size:12px; margin-top:2px">Silakan santai sejenak atau hubungi owner untuk distribusi kain baru.</div>
-                            </td>
-                        </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-
+        <div class="stat-card" style="animation-delay:.15s">
+            <div class="stat-stripe" style="background:linear-gradient(90deg,var(--b500),#93c5fd)"></div>
+            <div class="stat-ico" style="background:var(--b100);color:var(--b500)"><i class="bi bi-gear-wide-connected"></i></div>
+            <div class="stat-label">Sedang Dikerjakan</div>
+            <div class="stat-val" style="color:var(--b700)"><?= $total_proses ?> <span style="font-size:13px">tugas</span></div>
+            <div class="stat-note">Produksi aktif saat ini</div>
+            <div class="stat-blob" style="background:var(--b500)"></div>
         </div>
-    </main>
-
-    <div class="modal-overlay" id="modalUpdate">
-        <div class="modal-box">
-            <button class="modal-close" onclick="tutupModal('modalUpdate')"><i class="bi bi-x"></i></button>
-            <div class="modal-title"><i class="bi bi-arrow-repeat"></i> Update Progres Produksi</div>
-            
-            <form action="" method="POST">
-                <input type="hidden" name="id_produksi" id="updateId">
-                
-                <div class="form-group">
-                    <label class="form-lbl">Status Produksi Sekarang</label>
-                    <select name="status_produksi" id="updateStatus" class="form-inp" style="height:42px">
-                        <option value="Belum Dimulai">Belum Dimulai</option>
-                        <option value="Sedang Diproses">Sedang Diproses</option>
-                        <option value="Selesai">Selesai (Siap Setor)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-lbl">Kualitas Hasil Produksi</label>
-                    <select name="kualitas_produksi" id="updateKualitas" class="form-inp" style="height:42px">
-                        <option value="baik">Sangat Baik / Sesuai Standar</option>
-                        <option value="cacat_minor">Cacat Minor (Sedikit Noda/Benang)</option>
-                        <option value="perlu_revisi">Perlu Revisi (Kurang Rapi)</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-lbl">Catatan / Keterangan Tambahan</label>
-                    <textarea name="keterangan" id="updateKeterangan" class="form-inp" rows="3" placeholder="Contoh: Kain kurang 1 yard, atau Jahitan selesai saku kiri..."></textarea>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="tutupModal('modalUpdate')">Batal</button>
-                    <button type="submit" name="update_status" class="btn-save">Simpan Perubahan</button>
-                </div>
-            </form>
+        <div class="stat-card" style="animation-delay:.2s">
+            <div class="stat-stripe" style="background:linear-gradient(90deg,var(--a500),#fcd34d)"></div>
+            <div class="stat-ico" style="background:var(--a100);color:var(--a500)"><i class="bi bi-wallet2"></i></div>
+            <div class="stat-label">Gaji Terkonfirmasi</div>
+            <div class="stat-val" style="color:var(--a700)"><?= $total_lunas ?> <span style="font-size:13px">item</span></div>
+            <div class="stat-note">Sudah kamu konfirmasi diterima</div>
+            <div class="stat-blob" style="background:var(--a500)"></div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="modalKomplain">
-        <div class="modal-box">
-            <button class="modal-close" onclick="tutupModal('modalKomplain')"><i class="bi bi-x"></i></button>
-            <div class="modal-title"><i class="bi bi-chat-square-text-fill" style="color:var(--r500)"></i> Laporkan Masalah / Komplain</div>
-            
+    <!-- TABLE -->
+    <div class="sec-hd" id="tabel-produksi">
+        <div class="sec-title"><span class="sec-dot"></span> Daftar Produksi Kamu 🪡</div>
+    </div>
+    <div class="tbl-card">
+        <div class="tbl-hd">
+            <div class="tbl-hd-title"><i class="bi bi-table"></i> Riwayat Produksi &amp; Status Upah</div>
+        </div>
+        <div style="overflow-x:auto">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Produk</th>
+                    <th>Jumlah</th>
+                    <th>Total Upah</th>
+                    <th>Deadline</th>
+                    <th>Status Gaji</th>
+                    <th>Tgl Dibayar</th>
+                    <th>Progress</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php
+            $query = mysqli_query($koneksi, "
+                SELECT p.*, pr.NAMA_PRODUK,
+                    p.DEADLINE, p.STATUS_KUALITAS,
+                    g.BUKTI_BAYAR, g.STATUS_TERIMA, g.TANGGAL_BAYAR, g.TANGGAL_KONFIRMASI,
+                    g.CATATAN_KOMPLAIN, g.TANGGAL_KOMPLAIN, g.STATUS_KOMPLAIN
+                FROM produksi p
+                JOIN produk pr ON p.ID_PRODUK = pr.ID_PRODUK
+                LEFT JOIN penggajian g ON p.ID_PRODUKSI = g.ID_PRODUKSI
+                WHERE p.ID_PENJAHIT = '$id_penjahit'
+                ORDER BY p.ID_PRODUKSI DESC");
+
+            while($row = mysqli_fetch_assoc($query)):
+                $upah_tugas    = $row['JUMLAH_DIPRODUKSI'] * $upah_satuan;
+                $st_pengerjaan = $row['STATUS_PRODUKSI'] ?? 'Pending';
+                $status_terima = $row['STATUS_TERIMA'] ?? '';
+                $ada_bukti     = !empty($row['BUKTI_BAYAR']);
+                $tgl_bayar     = $row['TANGGAL_BAYAR'] ? date('d M Y', strtotime($row['TANGGAL_BAYAR'])) : '-';
+                $tgl_konfirm   = $row['TANGGAL_KONFIRMASI'] ? date('d M Y, H:i', strtotime($row['TANGGAL_KONFIRMASI'])) : null;
+                // Hitung sisa hari deadline
+                $deadline_raw   = $row['DEADLINE'] ?? '';
+                $sisa_hari      = null;
+                $dl_class       = 'dl-none';
+                $dl_label       = 'Belum diset';
+
+                if (!empty($deadline_raw)) {
+                    $sisa_hari = (int)ceil((strtotime($deadline_raw) - strtotime('today')) / 86400);
+                    if ($sisa_hari < 0) {
+                        $dl_class = 'dl-lewat';
+                        $dl_label = 'Terlambat ' . abs($sisa_hari) . ' hari';
+                    } elseif ($sisa_hari <= 2) {
+                        $dl_class = 'dl-mepet';
+                        $dl_label = $sisa_hari == 0 ? 'Hari ini!' : 'Sisa ' . $sisa_hari . ' hari';
+                    } else {
+                        $dl_class = 'dl-aman';
+                        $dl_label = 'Sisa ' . $sisa_hari . ' hari';
+                    }
+                }
+                $status_komplain  = $row['STATUS_KOMPLAIN'] ?? '';
+                $catatan_komplain = $row['CATATAN_KOMPLAIN'] ?? '';
+                $tgl_komplain     = $row['TANGGAL_KOMPLAIN'] ? date('d M Y, H:i', strtotime($row['TANGGAL_KOMPLAIN'])) : '';
+
+                $prog_class = match($st_pengerjaan) {
+                    'Selesai' => 'bp-green', 'Proses' => 'bp-blue',
+                    'Kendala' => 'bp-red',   default  => 'bp-yellow',
+                };
+                $prog_icon = match($st_pengerjaan) {
+                    'Selesai' => 'check-circle-fill', 'Proses' => 'arrow-repeat',
+                    'Kendala' => 'exclamation-circle-fill', default => 'clock',
+                };
+            ?>
+            <tr>
+                <td><span class="id-tag"><?= $row['ID_PRODUKSI'] ?></span></td>
+                <td style="font-weight:700"><?= htmlspecialchars($row['NAMA_PRODUK']) ?></td>
+                <td style="font-weight:600"><?= $row['JUMLAH_DIPRODUKSI'] ?> <span style="font-size:11px;color:var(--text3)">pcs</span></td>
+                <td style="font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;color:var(--g700)">Rp <?= number_format($upah_tugas) ?></td>
+                <td>
+                    <span class="deadline-pill <?= $dl_class ?>">
+                        <i class="bi bi-<?= ($dl_class=='dl-lewat') ? 'alarm-fill' : (($dl_class=='dl-mepet') ? 'clock-fill' : 'calendar-check') ?>"></i>
+                        <?= $dl_label ?>
+                    </span>
+
+                    <?php if(!empty($deadline_raw)): ?>
+                        <div class="timestamp-sm">
+                            <?= date('d M Y', strtotime($deadline_raw)) ?>
+                        </div>
+                    <?php endif; ?>
+                </td>    
+
+                <!-- STATUS GAJI -->
+                <td>
+                    <?php if($status_terima == 'Diterima'): ?>
+                        <span class="badge-pill bp-green"><i class="bi bi-check-all"></i> Lunas</span>
+                        <?php if($tgl_konfirm): ?><span class="timestamp-sm">✓ <?= $tgl_konfirm ?></span><?php endif; ?>
+
+                    <?php elseif($ada_bukti): ?>
+                        <span class="badge-pill bp-pink pulse"><i class="bi bi-exclamation-circle"></i> Perlu Konfirmasi</span>
+
+                    <?php elseif($status_komplain == 'Menunggu'): ?>
+                        <span class="badge-pill bp-yellow"><i class="bi bi-clock-history"></i> Komplain Dikirim</span>
+                        <?php if($tgl_komplain): ?><span class="timestamp-sm"><?= $tgl_komplain ?></span><?php endif; ?>
+
+                    <?php else: ?>
+                        <span class="badge-pill bp-purple"><i class="bi bi-hourglass-split"></i> Menunggu Owner</span>
+                    <?php endif; ?>
+                </td>
+
+                <td style="font-size:13px;color:var(--text2)"><?= $tgl_bayar ?></td>
+
+                <!-- PROGRESS -->
+                <td>
+                    <span class="badge-pill <?= $prog_class ?>"><i class="bi bi-<?= $prog_icon ?>"></i> <?= $st_pengerjaan ?></span>
+                </td>
+
+                <!-- AKSI -->
+                <td>
+                    <div style="display:flex;flex-wrap:wrap;gap:5px">
+                        <!-- Update Progress -->
+                        <button class="btn-aksi btn-update"
+                         onclick="bukaModalUpdate('<?= $row['ID_PRODUKSI'] ?>', '<?= $st_pengerjaan ?>', '<?= htmlspecialchars($row['KETERANGAN'] ?? '', ENT_QUOTES) ?>', '<?= $row['STATUS_KUALITAS'] ?? 'baik' ?>')">
+                         <i class="bi bi-pencil-square"></i> Update
+                        </button>
+
+                        <?php if($ada_bukti && $status_terima != 'Diterima'): ?>
+                        <a href="../assets/bukti_gaji/<?= $row['BUKTI_BAYAR'] ?>" target="_blank" class="btn-aksi btn-nota">
+                            <i class="bi bi-file-image"></i> Nota
+                        </a>
+                        <a href="konfirmasi_gaji.php?id=<?= $row['ID_PRODUKSI'] ?>" class="btn-aksi btn-konfirm"
+                           onclick="return confirm('Pastikan gaji sudah kamu terima ya!')">
+                            <i class="bi bi-cash-coin"></i> Konfirmasi
+                        </a>
+                        <?php endif; ?>
+
+                        <?php if($status_komplain != 'Menunggu' && $status_terima != 'Diterima'): ?>
+                        <button class="btn-aksi btn-komplain"
+                            onclick="bukaModalKomplain('<?= $row['ID_PRODUKSI'] ?>', '<?= htmlspecialchars($catatan_komplain, ENT_QUOTES) ?>')">
+                            <i class="bi bi-exclamation-triangle"></i> Komplain
+                        </button>
+                        <?php endif; ?>
+                    </div>
+                </td>
+            </tr>
+            <?php endwhile; ?>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+</div>
+</main>
+
+<!-- ════ MODAL UPDATE PROGRESS ════ -->
+<div class="modal-overlay" id="modalUpdate">
+    <div class="modal-box">
+        <button class="modal-close" onclick="tutupModal('modalUpdate')"><i class="bi bi-x-lg"></i></button>
+        <div class="modal-title"><i class="bi bi-pencil-square"></i> Update Progres Produksi</div>
+        <form action="update_progres.php" method="POST">
+            <input type="hidden" name="id" id="updateId">
+            <div class="form-group">
+                <label class="form-lbl">Status Pengerjaan</label>
+                <select name="status" id="updateStatus" class="form-inp">
+                    <option value="Pending">Pending</option>
+                    <option value="Proses">Proses</option>
+                    <option value="Kendala">Kendala</option>
+                    <option value="Selesai">Selesai</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Status Kualitas Produk</label>
+                <select name="status_kualitas" id="updateKualitas" class="form-inp">
+                    <option value="baik">✅ Baik / Tanpa Kesalahan</option>
+                    <option value="ada_kesalahan">⚠️ Ada Kesalahan Produk</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Keterangan</label>
+                <textarea name="keterangan" id="updateKeterangan" class="form-inp" rows="3"
+                    placeholder="Tulis keterangan progres kamu..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="tutupModal('modalUpdate')">Batal</button>
+                <button type="submit" class="btn-save"><i class="bi bi-check-lg"></i> Simpan Progres</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ════ MODAL KOMPLAIN ════ -->
+<div class="modal-overlay" id="modalKomplain">
+    <div class="modal-box">
+        <button class="modal-close" onclick="tutupModal('modalKomplain')"><i class="bi bi-x-lg"></i></button>
+        <div class="modal-title" style="color:var(--r700)"><i class="bi bi-exclamation-triangle-fill" style="color:var(--r500)"></i> Laporkan Gaji Tidak Masuk</div>
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="id_produksi_komplain" id="komplainId">
             <div class="info-box">
                 <i class="bi bi-info-circle-fill"></i>
-                <div>Gunakan fitur ini jika jahitan yang Anda setorkan ditolak oleh sistem atau ada masalah bahan baku di tengah jalan. Status akan kembali ke <b>Revisi</b>.</div>
+                Laporan ini akan dikirim ke owner untuk segera ditindaklanjuti. Sertakan keterangan yang jelas ya!
             </div>
-
-            <form action="" method="POST">
-                <input type="hidden" name="id_produksi" id="komplainId">
-                
-                <div class="form-group">
-                    <label class="form-lbl">Uraikan Detail Kendala / Keluhan Anda</label>
-                    <textarea name="catatan_komplain" id="komplainCatatan" class="form-inp" rows="4" required placeholder="Contoh: Resleting macet massal dari supplier, mohon kirim ulang part pengganti..."></textarea>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="tutupModal('modalKomplain')">Batal</button>
-                    <button type="submit" name="kirim_komplain" class="btn-save btn-save-red">Kirim ke Owner</button>
-                </div>
-            </form>
-        </div>
+            <div class="form-group">
+                <label class="form-lbl">Keterangan Masalah <span style="color:var(--r500)">*</span></label>
+                <textarea name="catatan_komplain" id="komplainCatatan" class="form-inp" rows="4"
+                    placeholder="Contoh: Sudah 3 hari gaji belum masuk, transfer tidak terdeteksi..." required></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-lbl">Bukti Pendukung <span style="font-weight:500;color:var(--text3)">(opsional, foto/screenshot)</span></label>
+                <input type="file" name="bukti_komplain" class="form-inp" accept="image/*,.pdf"
+                    style="padding:8px 14px;cursor:pointer">
+                <div style="font-size:11px;color:var(--text3);margin-top:4px">Format: JPG, PNG, PDF. Maks 2MB.</div>
+            </div>
+            <div style="font-size:11.5px;color:var(--text3);margin-bottom:4px">
+                <i class="bi bi-clock"></i> Waktu laporan: <?= date('d M Y, H:i') ?> WIB
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="tutupModal('modalKomplain')">Batal</button>
+                <button type="submit" name="komplain" class="btn-save btn-save-red">
+                    <i class="bi bi-send-fill"></i> Kirim Laporan
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
+<!-- TOAST -->
 <?php if(isset($_GET['sukses'])): ?>
-<div class="toast-notif" id=\"toastEl\">
+<div class="toast-notif" id="toastEl">
     <i class="bi bi-check-circle-fill"></i>
     Laporan komplain berhasil dikirim ke owner! 🌸
 </div>
@@ -555,6 +611,9 @@ function bukaModalKomplain(id, catatan) {
 
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if(e.target===m) m.classList.remove('show'); });
+});
+document.addEventListener('keydown', e => {
+    if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
 });
 </script>
 </body>
