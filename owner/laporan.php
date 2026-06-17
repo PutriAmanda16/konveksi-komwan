@@ -93,12 +93,12 @@ $total_notif = $notif_bayar + $notif_chat + $stok_kritis + $aset_rusak;
 
 // ══ KEUANGAN ══
 $omset             = db_fetch_one($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS='Selesai'");
-$biaya_gaji        = db_fetch_one($koneksi, "SELECT SUM(TOTAL_UPAH) as t FROM penggajian WHERE STATUS_GAJI='Sudah Dibayar'");
+$biaya_gaji = db_fetch_one($koneksi, "SELECT SUM(TOTAL_UPAH) as t FROM penggajian");
 $biaya_bahan       = db_fetch_one($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan");
 $biaya_lain        = db_fetch_one($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran");
-$biaya_servis      = db_fetch_one($koneksi, "SELECT COALESCE(SUM(BIAYA_SERVIS),0) as t FROM servis");
-
-$hutang            = 0;
+$biaya_servis = db_fetch_one($koneksi, 
+    "SELECT COALESCE(SUM(JUMLAH_PENGELUARAN),0) as t FROM pengeluaran WHERE JENIS_PENGELUARAN='Perawatan'");
+$hutang = db_fetch_one($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan WHERE STATUS_BAYAR='Belum Dibayar'");
 $total_pengeluaran = $biaya_gaji + $biaya_bahan + $biaya_lain + $biaya_servis;
 $laba_bersih       = $omset - $total_pengeluaran;
 $margin_pct        = $omset > 0 ? round(($laba_bersih / $omset) * 100, 1) : 0;
@@ -518,13 +518,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <tbody>
                 <?php
                 $rows_pembelian = db_fetch_all($koneksi,
-                    "SELECT pb.*, s.NAMA_SUPPLIER,
-                     GROUP_CONCAT(CONCAT(dp.JUMLAH,'x ',bk.NAMA_BAHAN) SEPARATOR ', ') as DETAIL
-                     FROM pembelian_bahan pb
-                     LEFT JOIN supplier s ON pb.ID_SUPPLIER=s.ID_SUPPLIER
-                     LEFT JOIN detail_pembelian dp ON pb.ID_PEMBELIAN=dp.ID_PEMBELIAN
-                     LEFT JOIN bahan_baku bk ON dp.ID_BAHAN=bk.ID_BAHAN
-                     GROUP BY pb.ID_PEMBELIAN ORDER BY pb.TANGGAL_BELI DESC");
+                    "SELECT pb.*, s.NAMA_SUPPLIER
+                    FROM pembelian_bahan pb
+                    LEFT JOIN supplier s ON pb.ID_SUPPLIER = s.ID_SUPPLIER
+                    ORDER BY pb.TANGGAL_BELI DESC");
                 if (empty($rows_pembelian)): ?>
                     <tr><td colspan="6"><div class="empty-cell"><i class="bi bi-basket2"></i>Belum ada data pembelian</div></td></tr>
                 <?php else: foreach ($rows_pembelian as $pb):
@@ -535,7 +532,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <td><span class="id-tag green"><?= htmlspecialchars($pb['ID_PEMBELIAN']) ?></span></td>
                     <td style="color:var(--text2)"><?= date('d/m/Y', strtotime($pb['TANGGAL_BELI'])) ?></td>
                     <td style="font-weight:700"><?= htmlspecialchars($pb['NAMA_SUPPLIER'] ?? $pb['ID_SUPPLIER']) ?></td>
-                    <td style="color:var(--text3);font-size:13px"><?= htmlspecialchars($pb['DETAIL'] ?? '—') ?></td>
+                    <td style="color:var(--text3);font-size:13px"><?= htmlspecialchars($pb['NAMA_BAHAN'] ?? '—') ?></td>                    
                     <td style="font-weight:700;color:var(--r700)">Rp <?= number_format($pb['TOTAL_BIAYA']) ?></td>
                     <td>
                         <span class="badge <?= $lunas ? 'badge-g' : 'badge-y' ?>">
@@ -563,8 +560,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 <?php
                 $rows_gaji = db_fetch_all($koneksi,
                     "SELECT g.*, p.NAMA_PENJAHIT FROM penggajian g
-                     JOIN penjahit p ON g.ID_PENJAHIT=p.ID_PENJAHIT
-                     ORDER BY g.ID_GAJI DESC");
+                    LEFT JOIN penjahit p ON g.ID_PENJAHIT = p.ID_PENJAHIT
+                    ORDER BY g.ID_GAJI DESC");
                 if (empty($rows_gaji)): ?>
                     <tr><td colspan="5"><div class="empty-cell"><i class="bi bi-cash-coin"></i>Belum ada data penggajian</div></td></tr>
                 <?php else: foreach ($rows_gaji as $g):
