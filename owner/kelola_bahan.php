@@ -40,8 +40,9 @@ if (isset($_POST['tambah'])) {
         $id_pb = 'PB' . str_pad($num, 2, '0', STR_PAD_LEFT);
         mysqli_query($koneksi, "INSERT INTO pembelian_bahan (ID_PEMBELIAN,ID_SUPPLIER,ID_OWNER,TANGGAL_BELI,TOTAL_BIAYA,STATUS_BAYAR)
             VALUES ('$id_pb','$id_sup','{$_SESSION['user']}','$tgl_beli','$total','Belum Dibayar')");
-        mysqli_query($koneksi, "INSERT INTO detail_pembelian (ID_PEMBELIAN,ID_BAHAN,JUMLAH,HARGA_SATUAN)
-            VALUES ('$id_pb','$id','$stok','$harga')");
+        $id_detail = 'DTL' . str_pad(rand(1,9999), 4, '0', STR_PAD_LEFT);
+        mysqli_query($koneksi, "INSERT INTO detail_pembelian (ID_DETAIL_BELI,ID_PEMBELIAN,ID_BAHAN,JUMLAH_BELI,SUBTOTAL_BELI)
+            VALUES ('$id_detail','$id_pb','$id','$stok',".($stok*$harga).")");
         $flash = 'ok:Bahan berhasil ditambahkan & pembelian tercatat! 🎉';
     } else {
         $flash = 'error:Gagal: ' . mysqli_error($koneksi);
