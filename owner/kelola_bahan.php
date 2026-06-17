@@ -32,9 +32,11 @@ if (isset($_POST['tambah'])) {
     $tgl_beli = mysqli_real_escape_string($koneksi, $_POST['tgl_beli']);
     $total    = $stok * $harga;
 
-    $q1 = "INSERT INTO bahan_baku (ID_BAHAN, NAMA_BAHAN, JUMLAH_STOK, HARGA_SATUAN, ID_SUPPLIER)
-           VALUES ('$id','$nama','$stok','$harga','$id_sup')";
-    if (mysqli_query($koneksi, $q1)) {
+    $cek = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT ID_BAHAN FROM bahan_baku WHERE ID_BAHAN='$id'"));
+    if ($cek) {
+        $flash = 'error:ID Bahan sudah digunakan, pilih ID lain.';
+    } elseif (mysqli_query($koneksi, "INSERT INTO bahan_baku (ID_BAHAN, NAMA_BAHAN, JUMLAH_STOK, HARGA_SATUAN, ID_SUPPLIER)
+       VALUES ('$id','$nama','$stok','$harga','$id_sup')")) {
         $last  = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT ID_PEMBELIAN FROM pembelian_bahan ORDER BY ID_PEMBELIAN DESC LIMIT 1"));
         $num   = $last ? (int)substr($last['ID_PEMBELIAN'], 2) + 1 : 1;
         $id_pb = 'PB' . str_pad($num, 2, '0', STR_PAD_LEFT);
