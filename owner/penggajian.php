@@ -732,7 +732,7 @@ body::before {
                             <div class="komp-box"><?= $catatan_komp ?></div>
                         <?php endif; ?>
                         <?php if($bukti_komp): ?>
-                            <a href="../assets/bukti_gaji/komplain/<?= $bukti_komp ?>" target="_blank" class="komp-link">
+                            <a href="../uploads/komplain/<?= htmlspecialchars($bukti_komp) ?>" target="_blank" class="komp-link">
                                 <i class="bi bi-file-image"></i> Lihat Bukti
                             </a>
                         <?php endif; ?>
