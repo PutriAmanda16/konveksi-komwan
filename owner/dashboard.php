@@ -16,7 +16,7 @@ $omset              = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTA
 // Tanpa filter STATUS_TERIMA
 $biaya_gaji = mysqli_fetch_assoc(mysqli_query($koneksi, 
     "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian 
-     WHERE STATUS_BAYAR = 'Sudah Dibayar'"))['t'] ?? 0;
+     WHERE STATUS = 'Sudah Dibayar'"))['t'] ?? 0;
 // atau coba TOTAL_UPAH kalau JUMLAH_GAJI tetap 0:
 // "SELECT SUM(TOTAL_UPAH) as t FROM penggajian"
 $biaya_bahan        = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan"))['t'] ?? 0;
