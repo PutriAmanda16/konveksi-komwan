@@ -277,18 +277,206 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .pesanan-card:nth-child(<?=$i?>){animation-delay:<?=($i-1)*0.05?>s;}
 <?php endfor; ?>
 
-.card-top{padding:16px 20px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--p50),var(--white));}
-.card-id{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--p50),var(--v100));color:var(--p600);border:1px solid var(--border2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;}
+/* ══ CARD ══ */
+.card-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1.5px solid var(--border);}
+.card-id{font-family:'Quicksand',sans-serif;font-size:13px;font-weight:800;color:var(--text3);letter-spacing:0.5px;}
 .card-actions{display:flex;align-items:center;gap:6px;}
-.act-btn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;text-decoration:none;border:1.5px solid;transition:all var(--ease);cursor:pointer;background:transparent;}
-.act-edit{color:var(--a700);border-color:rgba(234,179,8,0.3);background:var(--a100);}
-.act-edit:hover{background:var(--a500);color:#fff;border-color:var(--a500);}
-.act-del{color:var(--r700);border-color:rgba(239,68,68,0.3);background:var(--r100);}
-.act-del:hover{background:var(--r500);color:#fff;border-color:var(--r500);}
-
-.card-body-inner{padding:18px 20px;}
+.status-badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:99px;font-size:11.5px;font-weight:700;}
+.st-pending{background:var(--a100);color:var(--a700);}
+.st-proses{background:var(--b100);color:var(--b700);}
+.st-selesai{background:var(--g100);color:var(--g700);}
+.act-btn{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:all var(--ease);}
+.act-edit{color:var(--b500);}.act-edit:hover{background:var(--b100);border-color:var(--b500);}
+.act-del{color:var(--r500);}.act-del:hover{background:var(--r100);border-color:var(--r500);}
+.card-body-inner{padding:14px 18px;}
 .pelanggan-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
-.pel-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--clr),var(--clr)bb)"><?=$huruf?></div>
+.pel-av{width:38px;height:38px;border-radius:50%;background:var(--clr,var(--p400));display:flex;align-items:center;justify-content:center;font-family:'Quicksand',sans-serif;font-size:15px;font-weight:800;color:#fff;flex-shrink:0;}
+.pel-name{font-size:14px;font-weight:700;color:var(--text);}
+.pel-date{font-size:11.5px;color:var(--text3);font-weight:500;}
+.item-box{background:var(--p50);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px;}
+.item-box-title{font-size:11px;font-weight:800;letter-spacing:0.7px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.item-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border2);}
+.item-row:last-child{border-bottom:none;}
+.item-name{font-size:13.5px;font-weight:700;color:var(--text);}
+.item-meta{font-size:11.5px;color:var(--text3);}
+.item-sub{font-size:13px;font-weight:700;color:var(--p500);}
+.total-row{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,var(--p50),var(--v100));border:1.5px solid var(--border2);border-radius:var(--r-md);padding:10px 14px;margin-bottom:14px;}
+.total-lbl{font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:6px;}
+.total-val{font-family:'Quicksand',sans-serif;font-size:16px;font-weight:800;color:var(--p500);}
+.card-form{background:var(--p50);border:1.5px solid var(--border);border-radius:var(--r-md);padding:12px 14px;}
+.form-row-inline{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;}
+.form-grp{display:flex;flex-direction:column;gap:4px;flex:1;}
+.form-lbl{font-size:10.5px;font-weight:700;color:var(--text3);letter-spacing:0.5px;display:flex;align-items:center;gap:4px;}
+.form-sel,.form-inp{width:100%;padding:7px 10px;border:1.5px solid var(--border2);border-radius:8px;font-family:'Nunito',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color var(--ease-plain);}
+.form-sel:focus,.form-inp:focus{border-color:var(--p400);}
+.update-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:linear-gradient(135deg,var(--p500),var(--p400));color:#fff;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all var(--ease);white-space:nowrap;height:36px;}
+.update-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(232,50,138,0.35);}
+
+/* ══ EMPTY ══ */
+.empty-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;}
+.empty-icon{font-size:52px;margin-bottom:14px;opacity:0.3;}
+.empty-title{font-family:'Quicksand',sans-serif;font-size:20px;font-weight:700;color:var(--text2);margin-bottom:6px;}
+.empty-sub{font-size:13.5px;color:var(--text3);}
+
+/* ══ MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(61,26,40,0.45);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.22s ease;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal-box{background:var(--white);border-radius:var(--r-xl);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(61,26,40,0.22);transform:scale(0.96);transition:transform 0.22s ease;}
+.modal-overlay.open .modal-box{transform:scale(1);}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:var(--white);z-index:1;}
+.modal-title{font-family:'Quicksand',sans-serif;font-size:17px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;}
+.modal-close{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:14px;transition:all var(--ease);}
+.modal-close:hover{background:var(--r100);color:var(--r500);border-color:var(--r500);}
+.modal-body{padding:20px 22px;}
+.m-form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;}
+.m-label{font-size:11px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.m-control{width:100%;padding:9px 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:'Nunito',sans-serif;font-size:13.5px;color:var(--text);background:var(--white);outline:none;transition:border-color var(--ease-plain);}
+.m-control:focus{border-color:var(--p400);}
+.item-edit-row{display:grid;grid-template-columns:1fr 80px 80px;gap:10px;padding:10px 0;border-bottom:1px dashed var(--border);}
+.item-edit-row:last-child{border-bottom:none;}
+.item-edit-row label{font-size:10.5px;font-weight:700;color:var(--text3);display:block;margin-bottom:3px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;padding:16px 22px;border-top:1.5px solid var(--border);background:var(--p50);}
+.modal-cancel-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;background:var(--white);border:1.5px solid var(--border);color:var(--text2);font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all var(--ease);}
+.modal-cancel-btn:hover{background:var(--r100);color:var(--r700);border-color:var(--r500);}
+.modal-save-btn{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;background:linear-gradient(135deg,var(--p500),var(--p400));color:#fff;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all var(--ease);}
+.modal-save-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(232,50,138,0.35);}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <a href="dashboard.php" class="sb-brand">
+        <div class="brand-mark"><i class="bi bi-scissors"></i></div>
+        <div>
+            <div class="brand-name">Konveksi</div>
+            <div class="brand-sub">Management</div>
+        </div>
+    </a>
+    <div class="sb-owner">
+        <div class="owner-av"><?=$inisial?></div>
+        <div>
+            <div class="owner-name"><?=htmlspecialchars($nama_owner)?></div>
+            <div class="owner-role">Owner</div>
+        </div>
+    </div>
+    <nav class="sb-nav">
+        <div class="nav-group-label">Menu Utama</div>
+        <a href="dashboard.php"  class="nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="pesanan.php"    class="nav-item"><i class="bi bi-bag-heart"></i> Pesanan
+            <?php if($notif_bayar>0):?><span class="nav-pill pill-red"><?=$notif_bayar?></span><?php endif;?>
+        </a>
+        <a href="produksi.php"   class="nav-item active"><i class="bi bi-gear-fill"></i> Produksi</a>
+        <a href="penggajian.php" class="nav-item"><i class="bi bi-cash-stack"></i> Penggajian</a>
+        <div class="nav-group-label">Manajemen</div>
+        <a href="kelola_produk.php"   class="nav-item"><i class="bi bi-box-seam"></i> Produk</a>
+        <a href="kelola_penjahit.php" class="nav-item"><i class="bi bi-people"></i> Penjahit</a>
+        <a href="bahan_baku.php"      class="nav-item"><i class="bi bi-archive"></i> Bahan Baku
+            <?php if($stok_kritis>0):?><span class="nav-pill pill-orange"><?=$stok_kritis?></span><?php endif;?>
+        </a>
+        <a href="aset.php"            class="nav-item"><i class="bi bi-tools"></i> Aset</a>
+        <div class="nav-group-label">Laporan</div>
+        <a href="laporan.php"  class="nav-item"><i class="bi bi-bar-chart-line"></i> Laporan</a>
+        <a href="chat.php"     class="nav-item"><i class="bi bi-chat-dots"></i> Chat
+            <?php if($notif_chat>0):?><span class="nav-pill pill-pink"><?=$notif_chat?></span><?php endif;?>
+        </a>
+    </nav>
+    <div class="sb-footer">
+        <a href="../logout.php" class="nav-item logout"><i class="bi bi-box-arrow-left"></i> Logout</a>
+    </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+    <div class="tb-greeting">
+        <div class="tb-hello">🏭 Manajemen Produksi</div>
+        <div class="tb-sub"><?=date('l, d F Y')?></div>
+    </div>
+    <div class="tb-actions">
+        <?php if($total_notif>0):?>
+        <a href="#" class="icon-btn"><i class="bi bi-bell"></i><span class="dot"></span></a>
+        <?php endif;?>
+        <div class="date-pill"><i class="bi bi-calendar3"></i><?=date('d/m/Y')?></div>
+    </div>
+</header>
+
+<!-- TOAST -->
+<?php if($msg==='updated'):?>
+<div class="toast-notif toast-success"><i class="bi bi-check-circle-fill"></i> Produksi berhasil diperbarui!</div>
+<?php elseif($msg==='deleted'):?>
+<div class="toast-notif toast-deleted"><i class="bi bi-trash3-fill"></i> Pesanan berhasil dihapus.</div>
+<?php endif;?>
+
+<main class="main">
+<div class="content">
+
+<!-- Page Header -->
+<div class="page-hd anim">
+    <div class="page-title-wrap">
+        <div class="page-icon"><i class="bi bi-gear-fill"></i></div>
+        <div>
+            <div class="page-title">Produksi Aktif</div>
+            <div class="page-subtitle">Kelola status, penjahit & deadline pesanan berjalan</div>
+        </div>
+    </div>
+    <a href="dashboard.php" class="back-btn"><i class="bi bi-arrow-left"></i> Kembali</a>
+</div>
+
+<!-- Stat Strip -->
+<div class="stat-strip anim">
+    <div class="stat-card sc-pink">
+        <div class="stat-ico" style="background:var(--p100);color:var(--p500)"><i class="bi bi-gear-fill"></i></div>
+        <div><div class="stat-lbl">Total Aktif</div><div class="stat-val" style="color:var(--p500)"><?=$total_produksi?></div></div>
+    </div>
+    <div class="stat-card sc-orange">
+        <div class="stat-ico" style="background:var(--a100);color:var(--a500)"><i class="bi bi-hourglass-split"></i></div>
+        <div><div class="stat-lbl">Pending</div><div class="stat-val" style="color:var(--a500)"><?=$total_pending?></div></div>
+    </div>
+    <div class="stat-card sc-blue">
+        <div class="stat-ico" style="background:var(--b100);color:var(--b500)"><i class="bi bi-arrow-repeat"></i></div>
+        <div><div class="stat-lbl">Proses</div><div class="stat-val" style="color:var(--b500)"><?=$total_proses?></div></div>
+    </div>
+    <div class="stat-card sc-green">
+        <div class="stat-ico" style="background:var(--g100);color:var(--g500)"><i class="bi bi-check-circle-fill"></i></div>
+        <div><div class="stat-lbl">Selesai</div><div class="stat-val" style="color:var(--g500)"><?=$total_selesai?></div></div>
+    </div>
+</div>
+
+<!-- Cards Grid -->
+<?php
+$has_data = false;
+$all_penjahit = [];
+$q_pj = mysqli_query($koneksi, "SELECT ID_PENJAHIT, NAMA_PENJAHIT FROM penjahit ORDER BY NAMA_PENJAHIT ASC");
+while($pj = mysqli_fetch_assoc($q_pj)) $all_penjahit[] = $pj;
+
+$all_produk = [];
+$q_pr = mysqli_query($koneksi, "SELECT ID_PRODUK, NAMA_PRODUK, HARGA FROM produk ORDER BY NAMA_PRODUK ASC");
+while($pr = mysqli_fetch_assoc($q_pr)) $all_produk[] = $pr;
+?>
+<div class="cards-grid">
+
+<?php while($row = mysqli_fetch_assoc($query)):
+    $id_psn    = $row['ID_PESANAN'];
+    $nama_pel  = $row['NAMA_PELANGGAN'] ?? '';
+    $huruf     = strtoupper(substr($nama_pel,0,1));
+    $st        = $row['STATUS'] ?? 'Pending';
+    $has_data  = true;
+?>
+<div class="pesanan-card">
+<div class="card-top">
+    <span class="card-id"># <?=$id_psn?></span>
+    <div class="card-actions">
+        <span class="status-badge st-<?=strtolower($st)?>"><?=$st?></span>
+        <button class="act-btn act-edit" onclick="openModal('modal-<?=$id_psn?>')"><i class="bi bi-pencil"></i></button>
+        <form method="POST" style="display:inline" onsubmit="return confirm('Hapus pesanan ini?')">
+            <input type="hidden" name="id_pesanan" value="<?=$id_psn?>">
+            <button type="submit" name="hapus_pesanan" class="act-btn act-del"><i class="bi bi-trash3"></i></button>
+        </form>
+    </div>
+</div>
+<div class="card-body-inner">
+<div class="pelanggan-row">
+    <div class="pel-av" style="--clr:var(--p400)"><?=$huruf?></div>
                 <div>
                     <div class="pel-name"><?=htmlspecialchars($nama_pel)?></div>
                     <div class="pel-date"><i class="bi bi-calendar3" style="font-size:10px"></i> <?=date('d F Y',strtotime($row['WAKTU_PESAN']))?></div>
