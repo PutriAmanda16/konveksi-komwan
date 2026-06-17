@@ -13,10 +13,10 @@ $total_penjahit  = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM penjahi
 $total_produk    = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM produk"));
 
 $omset              = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS='Selesai'"))['t'] ?? 0;
-$biaya_gaji         = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_UPAH) as t FROM penggajian WHERE STATUS_TERIMA='Diterima'"))['t'] ?? 0;
+$biaya_gaji = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian WHERE STATUS_TERIMA='Diterima'"))['t'] ?? 0;
 $biaya_bahan        = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan"))['t'] ?? 0;
 $biaya_lain         = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran"))['t'] ?? 0;
-$pengeluaran_servis = 0; // Tabel servis_aset belum tersedia
+$pengeluaran_servis = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran WHERE KETERANGAN LIKE '%servis%' OR KETERANGAN LIKE '%aset%'"))['t'] ?? 0;
 $total_pengeluaran  = $biaya_gaji + $biaya_bahan + $biaya_lain + $pengeluaran_servis;
 $laba_bersih        = $omset - $total_pengeluaran;
 $hutang_bahan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan WHERE STATUS_BAYAR='Belum Dibayar'"))['t'] ?? 0;
@@ -77,10 +77,12 @@ while ($r = mysqli_fetch_assoc($q_top)) {
 $penjahit_prod = [];
 $q_pj = mysqli_query($koneksi,
     "SELECT pj.NAMA_PENJAHIT, COUNT(pg.ID_GAJI) as total_kerja,
-            SUM(pg.TOTAL_UPAH) as total_upah, AVG(pg.TOTAL_UPAH) as avg_upah
+            SUM(pg.JUMLAH_GAJI) as total_upah, AVG(pg.JUMLAH_GAJI) as avg_upah
      FROM penggajian pg
-     JOIN penjahit pj ON pg.ID_PENJAHIT = pj.ID_PENJAHIT
-     GROUP BY pg.ID_PENJAHIT ORDER BY total_upah DESC LIMIT 5");
+     JOIN produksi pr ON pg.ID_PRODUKSI = pr.ID_PRODUKSI
+     JOIN penjahit pj ON pr.ID_PENJAHIT = pj.ID_PENJAHIT
+     GROUP BY pj.ID_PENJAHIT
+     ORDER BY total_upah DESC LIMIT 5");
 while ($r = mysqli_fetch_assoc($q_pj)) $penjahit_prod[] = $r;
 
 // ── Pesanan per status (untuk donut)
@@ -948,7 +950,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
             <?php
             $q4=mysqli_query($koneksi,"SELECT pb.*,s.NAMA_SUPPLIER FROM pembelian_bahan pb LEFT JOIN supplier s ON pb.ID_SUPPLIER=s.ID_SUPPLIER ORDER BY pb.TANGGAL_BELI DESC LIMIT 6");
             if (mysqli_num_rows($q4)>0): while ($pb=mysqli_fetch_assoc($q4)):
-                $sc2='badge-y'; $si2='clock'; $sl2='Tidak Tersedia';
+                $sb = $pb['STATUS_BAYAR'] ?? 'Belum Dibayar';
+                $sc2 = $sb == 'Sudah Dibayar' ? 'badge-g' : 'badge-y';
+                $si2 = $sb == 'Sudah Dibayar' ? 'check-circle-fill' : 'clock';
+                $sl2 = $sb;            
             ?>
             <tr>
                 <td><span class="id-tag green"><?= htmlspecialchars($pb['ID_PEMBELIAN']) ?></span></td>
