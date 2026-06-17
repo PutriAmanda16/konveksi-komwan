@@ -19,8 +19,7 @@ $biaya_lain         = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUML
 $pengeluaran_servis = 0; // Tabel servis_aset belum tersedia
 $total_pengeluaran  = $biaya_gaji + $biaya_bahan + $biaya_lain + $pengeluaran_servis;
 $laba_bersih        = $omset - $total_pengeluaran;
-$hutang_bahan = 0; // Tabel pembelian_bahan tidak memiliki kolom status bayar
-
+$hutang_bahan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan WHERE STATUS_BAYAR='Belum Dibayar'"))['t'] ?? 0;
 $notif_bayar = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'"));
 $notif_chat = 0; // Tabel chat_sesi tidak tersedia
 $aset_rusak = 0; // Kolom KONDISI_ASET tidak tersedia di tabel aset
