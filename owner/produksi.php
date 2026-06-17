@@ -335,50 +335,50 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <body>
 
 <!-- ══ SIDEBAR ══ -->
+<!-- ════ SIDEBAR ════ -->
 <aside class="sidebar">
     <a href="dashboard.php" class="sb-brand">
         <div class="brand-mark"><i class="bi bi-scissors"></i></div>
-        <div>
-            <div class="brand-name">Konveksi</div>
-            <div class="brand-sub">Management</div>
-        </div>
+        <div><div class="brand-name">Konveksi Apps</div><div class="brand-sub">Panel Owner</div></div>
     </a>
     <div class="sb-owner">
-        <div class="owner-av"><?=$inisial?></div>
-        <div>
-            <div class="owner-name"><?=htmlspecialchars($nama_owner)?></div>
-            <div class="owner-role">Owner</div>
+        <div class="owner-av"><?= $inisial ?></div>
+        <div style="overflow:hidden;min-width:0">
+            <div class="owner-name"><?= htmlspecialchars($nama_owner) ?></div>
+            <div class="owner-role">✨ Owner · Administrator</div>
         </div>
     </div>
     <nav class="sb-nav">
-        <div class="nav-group-label">Menu Utama</div>
-        <a href="dashboard.php"  class="nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a href="pesanan.php"    class="nav-item"><i class="bi bi-bag-heart"></i> Pesanan
-            <?php if($notif_bayar > 0): ?>
-            <span class="nav-pill pill-red"><?=$notif_bayar?></span>
-            <?php endif; ?>
+        <a class="nav-item" href="dashboard.php"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+        <div class="nav-group-label">Manajemen Data</div>
+        <a class="nav-item" href="kelola_produk.php"><i class="bi bi-box-seam"></i> Produk</a>
+        <a class="nav-item" href="kelola_bahan.php">
+            <i class="bi bi-basket"></i> Bahan Baku
+            <?php if ($stok_kritis > 0): ?><span class="nav-pill pill-orange pulse"><?= $stok_kritis ?></span><?php endif; ?>
         </a>
-        <a href="produksi.php"   class="nav-item active"><i class="bi bi-gear-fill"></i> Produksi</a>
-        <a href="penggajian.php" class="nav-item"><i class="bi bi-cash-stack"></i> Penggajian</a>
-        <div class="nav-group-label">Manajemen</div>
-        <a href="kelola_produk.php"   class="nav-item"><i class="bi bi-box-seam"></i> Produk</a>
-        <a href="data_penjahit.php" class="nav-item"><i class="bi bi-people"></i> Penjahit</a>
-        <a href="kelola_bahan.php"      class="nav-item"><i class="bi bi-archive"></i> Bahan Baku
-            <?php if($stok_kritis > 0): ?>
-            <span class="nav-pill pill-orange"><?=$stok_kritis?></span>
-            <?php endif; ?>
+        <a class="nav-item" href="kelola_aset.php"><i class="bi bi-building-gear"></i> Aset &amp; Inventaris</a>
+        <a class="nav-item" href="data_penjahit.php"><i class="bi bi-people"></i> Data Penjahit</a>
+        <a class="nav-item" href="pelanggan.php"><i class="bi bi-person-badge"></i> Data Pelanggan</a>
+        <a class="nav-item" href="supplier.php"><i class="bi bi-truck"></i> Data Supplier</a>
+        <div class="nav-group-label">Operasional</div>
+        <a class="nav-item active" href="produksi.php"><i class="bi bi-gear-wide-connected"></i> Produksi Aktif</a>
+        <a class="nav-item" href="aturan_bonus_penalti.php"><i class="bi bi-sliders"></i> Aturan Bonus & Penalti</a>
+        <a class="nav-item" href="pantau_deadline.php"><i class="bi bi-alarm-fill"></i> Pantau Deadline</a>
+        <a class="nav-item" href="penggajian.php"><i class="bi bi-cash-stack"></i> Penggajian</a>
+        <a class="nav-item" href="konfirmasi_pembayaran.php">
+            <i class="bi bi-credit-card-2-front"></i> Konfirmasi Bayar
+            <?php if ($notif_bayar > 0): ?><span class="nav-pill pill-pink pulse"><?= $notif_bayar ?></span><?php endif; ?>
         </a>
-        <a href="kelola_aset.php" class="nav-item"><i class="bi bi-tools"></i> Aset</a>
+        <a class="nav-item" href="input_pengiriman.php"><i class="bi bi-truck-front-fill"></i> Input Pengiriman</a>
+        <a class="nav-item" href="chat.php">
+            <i class="bi bi-chat-dots-fill"></i> Inbox Chat
+            <?php if ($notif_chat > 0): ?><span class="nav-pill pill-red pulse"><?= $notif_chat ?></span><?php endif; ?>
+        </a>
         <div class="nav-group-label">Laporan</div>
-        <a href="laporan.php" class="nav-item"><i class="bi bi-bar-chart-line"></i> Laporan</a>
-        <a href="chat.php"    class="nav-item"><i class="bi bi-chat-dots"></i> Chat
-            <?php if($notif_chat > 0): ?>
-            <span class="nav-pill pill-pink"><?=$notif_chat?></span>
-            <?php endif; ?>
-        </a>
+        <a class="nav-item" href="laporan.php"><i class="bi bi-file-earmark-bar-graph"></i> Laporan Keuangan</a>
     </nav>
     <div class="sb-footer">
-        <a href="../auth/logout.php" class="nav-item logout"><i class="bi bi-box-arrow-left"></i> Logout</a>
+        <a class="nav-item logout" href="../auth/logout.php"><i class="bi bi-box-arrow-left"></i> Keluar</a>
     </div>
 </aside>
 
