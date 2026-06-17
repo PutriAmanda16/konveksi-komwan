@@ -11,16 +11,40 @@ if(isset($_POST['bayar'])) {
     $tmp_file  = $_FILES['bukti']['tmp_name'];
     $tgl_bayar = date('Y-m-d H:i:s');
 
+    // Ambil data penjahit & hitung total upah dari produksi terkait
+    $d = mysqli_fetch_assoc(mysqli_query($koneksi,
+        "SELECT p.ID_PENJAHIT, p.JUMLAH_DIPRODUKSI, p.BONUS, p.PENALTI, pjt.UPAH_PER_UNIT
+         FROM produksi p
+         JOIN penjahit pjt ON p.ID_PENJAHIT = pjt.ID_PENJAHIT
+         WHERE p.ID_PRODUKSI = '$id_prod'"));
+
+    $id_penjahit = mysqli_real_escape_string($koneksi, $d['ID_PENJAHIT']);
+    $total_upah  = ($d['JUMLAH_DIPRODUKSI'] * $d['UPAH_PER_UNIT']) + ($d['BONUS'] ?? 0) - ($d['PENALTI'] ?? 0);
+
     $folder = "../assets/bukti_gaji/";
     if (!is_dir($folder)) mkdir($folder, 0755, true);
     move_uploaded_file($tmp_file, $folder . $nama_file);
-    $id_gaji = 'GAJ-' . time() . rand(10,99);
-    mysqli_query($koneksi, "INSERT INTO penggajian (ID_GAJI, ID_PRODUKSI, BUKTI_BAYAR, STATUS_TERIMA, TANGGAL_BAYAR) 
-                        VALUES ('$id_gaji', '$id_prod', '$nama_file', 'Belum', '$tgl_bayar') 
-                        ON DUPLICATE KEY UPDATE 
-                            BUKTI_BAYAR    = '$nama_file',
-                            STATUS_TERIMA  = 'Belum',
-                            TANGGAL_BAYAR  = '$tgl_bayar'");
+
+    // Cek dulu apakah sudah ada baris penggajian untuk ID_PRODUKSI ini
+    $cek = mysqli_fetch_assoc(mysqli_query($koneksi,
+        "SELECT ID_GAJI FROM penggajian WHERE ID_PRODUKSI='$id_prod'"));
+
+    if ($cek) {
+        mysqli_query($koneksi, "UPDATE penggajian SET
+            ID_PENJAHIT   = '$id_penjahit',
+            TOTAL_UPAH    = '$total_upah',
+            BUKTI_BAYAR   = '$nama_file',
+            STATUS_GAJI   = 'Sudah Dibayar',
+            STATUS_TERIMA = 'Belum',
+            TANGGAL_BAYAR = '$tgl_bayar'
+            WHERE ID_PRODUKSI = '$id_prod'");
+    } else {
+        $id_gaji = 'GAJ-' . time() . rand(10,99);
+        mysqli_query($koneksi, "INSERT INTO penggajian
+            (ID_GAJI, ID_PENJAHIT, ID_PRODUKSI, TOTAL_UPAH, STATUS_GAJI, BUKTI_BAYAR, STATUS_TERIMA, TANGGAL_BAYAR)
+            VALUES
+            ('$id_gaji', '$id_penjahit', '$id_prod', '$total_upah', 'Sudah Dibayar', '$nama_file', 'Belum', '$tgl_bayar')");
+    }
 
     echo "<script>alert('✅ Gaji berhasil dikirim! Penjahit akan menerima notifikasi untuk konfirmasi.'); window.location='penggajian.php';</script>";
 }
