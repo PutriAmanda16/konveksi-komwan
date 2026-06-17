@@ -13,13 +13,20 @@ $total_penjahit  = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM penjahi
 $total_produk    = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM produk"));
 
 $omset              = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS='Selesai'"))['t'] ?? 0;
-$biaya_gaji = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian WHERE STATUS_TERIMA='Diterima'"))['t'] ?? 0;
+// Tanpa filter STATUS_TERIMA
+$biaya_gaji = mysqli_fetch_assoc(mysqli_query($koneksi, 
+    "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian 
+     WHERE STATUS_BAYAR = 'Sudah Dibayar'"))['t'] ?? 0;
+// atau coba TOTAL_UPAH kalau JUMLAH_GAJI tetap 0:
+// "SELECT SUM(TOTAL_UPAH) as t FROM penggajian"
 $biaya_bahan        = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan"))['t'] ?? 0;
-$biaya_lain         = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran"))['t'] ?? 0;
+$biaya_lain = mysqli_fetch_assoc(mysqli_query($koneksi, 
+    "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran 
+     WHERE JENIS_PENGELUARAN != 'Perawatan'"))['t'] ?? 0;
 $pengeluaran_servis = mysqli_fetch_assoc(mysqli_query($koneksi, 
     "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran 
-     WHERE JENIS_PENGELUARAN LIKE '%servis%' OR JENIS_PENGELUARAN LIKE '%aset%'"))['t'] ?? 0;
-$total_pengeluaran  = $biaya_gaji + $biaya_bahan + $biaya_lain + $pengeluaran_servis;
+     WHERE JENIS_PENGELUARAN = 'Perawatan'"))['t'] ?? 0;
+$total_pengeluaran = $biaya_gaji + $biaya_bahan + $pengeluaran_servis + $biaya_lain;
 $laba_bersih        = $omset - $total_pengeluaran;
 $hutang_bahan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan WHERE STATUS_BAYAR='Belum Dibayar'"))['t'] ?? 0;
 $notif_bayar = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'"));
