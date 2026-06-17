@@ -389,8 +389,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                             <span>Silakan klik salah satu kartu produk di atas terlebih dahulu.</span>
                         </div>
 
-                        <div style="margin-bottom:14px" id="ukuranSection">
-                            <label class="form-lbl"><i class="bi bi-rulers"></i> Ukuran & Jumlah</label>
+                            <div style="margin-bottom:14px;display:none" id="ukuranSection">                            <label class="form-lbl"><i class="bi bi-rulers"></i> Ukuran & Jumlah</label>
                             <div id="ukuranContainer" style="display:flex;flex-direction:column;gap:8px"></div>
                             <input type="hidden" name="ukuran_data" id="input_ukuran_data">
                             <input type="hidden" name="jumlah" id="input_jumlah" value="1">
@@ -508,6 +507,7 @@ function pilihProduk(id, nama, harga, bahan, ukuran) {
     document.getElementById('selectedInfo').style.display    = 'block';
     document.getElementById('noSelectWarning').style.display = 'none';
     document.getElementById('summaryBox').style.display      = 'block';
+    document.getElementById('ukuranSection').style.display = 'block';
 
     renderUkuranRows();
 }
