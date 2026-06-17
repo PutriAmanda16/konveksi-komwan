@@ -8,8 +8,9 @@ if (!isset($_SESSION['user']) || $_SESSION['role'] != 'owner') {
 }
 
 $total_pelanggan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as t FROM pelanggan"))['t'] ?? 0;
-$total_aktif     = 0;
-$total_nonaktif  = 0;
+$query_aktif = mysqli_query($koneksi, "SELECT COUNT(DISTINCT ID_PELANGGAN) as t FROM pesanan");
+$total_aktif = mysqli_fetch_assoc($query_aktif)['t'] ?? 0;
+$total_nonaktif = $total_pelanggan - $total_aktif;
 
 $notif_bayar = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM pesanan WHERE STATUS_BAYAR='Menunggu Konfirmasi'"));
 $notif_chat  = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT COUNT(*) as t FROM chat_sesi WHERE STATUS='eskalasi'"))['t'] ?? 0;
