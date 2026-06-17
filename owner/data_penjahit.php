@@ -344,8 +344,13 @@ body::before { content:''; position:fixed; inset:0; background-image:radial-grad
             </thead>
             <tbody>
             <?php
-            $q = mysqli_query($koneksi, "SELECT p.*, 
-                (SELECT KETERANGAN FROM produksi WHERE ID_PENJAHIT = p.ID_PENJAHIT AND STATUS_PRODUKSI NOT IN ('Selesai','Batal') LIMIT 1) as PEKERJAAN_AKTIF
+            $q = mysqli_query($koneksi, "SELECT p.*,
+                (SELECT pr.NAMA_PRODUK 
+                FROM produksi prd
+                JOIN produk pr ON prd.ID_PRODUK = pr.ID_PRODUK
+                WHERE prd.ID_PENJAHIT = p.ID_PENJAHIT 
+                AND prd.STATUS_PRODUKSI NOT IN ('Selesai','Batal')
+                LIMIT 1) as PEKERJAAN_AKTIF
                 FROM penjahit p ORDER BY p.NAMA_PENJAHIT ASC");
             $idx = 0;
             while($d = mysqli_fetch_assoc($q)):
