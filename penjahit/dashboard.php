@@ -383,9 +383,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <tbody>
                         <?php
                         $q_list = mysqli_query($koneksi, "
-                            SELECT pr.*, ps.nama_pesanan, ps.tanggal_selesai as deadline
+                            SELECT pr.*, ps.NAMA_PESANAN, ps.TANGGAL_SELESAI as deadline
                             FROM produksi pr
-                            JOIN pesanan ps ON pr.ID_PESANAN = ps.id_pesanan
+                            JOIN pesanan ps ON pr.ID_PESANAN = ps.ID_PESANAN
                             WHERE pr.ID_PENJAHIT = '$id_penjahit'
                             ORDER BY 
                                 CASE pr.STATUS_PRODUKSI
@@ -394,7 +394,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                                     WHEN 'Sedang Diproses' THEN 3
                                     ELSE 4
                                 END ASC,
-                                ps.tanggal_selesai ASC
+                                ps.TANGGAL_SELESAI ASC
                         ");
                         
                         if (mysqli_num_rows($q_list) > 0):
@@ -424,7 +424,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         <tr>
                             <td><span class="id-tag"><?= htmlspecialchars($r['ID_PRODUKSI']) ?></span></td>
                             <td>
-                                <div style="font-weight:700; color:var(--text)"><?= htmlspecialchars($r['nama_pesanan']) ?></div>
+                                <div style="font-weight:700; color:var(--text)"><?= htmlspecialchars($r['NAMA_PESANAN']) ?></div>
                                 <span class="timestamp-sm">ID Pesanan: <?= htmlspecialchars($r['ID_PESANAN']) ?></span>
                             </td>
                             <td style="font-weight:700"><?= number_format($r['JUMLAH_DIPRODUKSI']) ?> <span style="font-size:11px; color:var(--text3)">Pcs</span></td>
