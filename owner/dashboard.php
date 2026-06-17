@@ -812,9 +812,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                     <div class="pj-av"><?= $initPj ?></div>
                     <div style="flex:1;min-width:0">
                         <div class="pj-name"><?= htmlspecialchars($pj['NAMA_PENJAHIT']) ?></div>
-                        <div class="pj-meta"><?= $pj['total_kerja'] ?> kali · Avg Rp <?= number_format($pj['avg_upah']) ?></div>
+                        <div class="pj-meta"><?= $pj['total_kerja'] ?> kali · Avg Rp <?= number_format($pj['avg_upah'] ?? 0) ?></div>
                     </div>
-                    <div class="pj-upah">Rp <?= number_format($pj['total_upah']) ?></div>
+                    <div class="pj-upah">Rp <?= number_format($pj['total_upah'] ?? 0) ?></div>                
                 </div>
                 <?php endforeach; else: ?>
                 <div style="text-align:center;padding:24px;color:var(--text3)">
