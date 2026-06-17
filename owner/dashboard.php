@@ -15,8 +15,8 @@ $total_produk    = mysqli_num_rows(mysqli_query($koneksi, "SELECT * FROM produk"
 $omset              = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_HARGA) as t FROM pesanan WHERE STATUS='Selesai'"))['t'] ?? 0;
 // Tanpa filter STATUS_TERIMA
 $biaya_gaji = mysqli_fetch_assoc(mysqli_query($koneksi, 
-    "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian 
-     WHERE STATUS = 'Sudah Dibayar'"))['t'] ?? 0;
+    "SELECT SUM(TOTAL_UPAH) as t FROM penggajian 
+     WHERE STATUS_GAJI = 'Sudah Dibayar'"))['t'] ?? 0;
 // atau coba TOTAL_UPAH kalau JUMLAH_GAJI tetap 0:
 // "SELECT SUM(TOTAL_UPAH) as t FROM penggajian"
 $biaya_bahan        = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan"))['t'] ?? 0;
