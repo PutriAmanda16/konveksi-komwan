@@ -16,7 +16,9 @@ $omset              = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTA
 $biaya_gaji = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_GAJI) as t FROM penggajian WHERE STATUS_TERIMA='Diterima'"))['t'] ?? 0;
 $biaya_bahan        = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan"))['t'] ?? 0;
 $biaya_lain         = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran"))['t'] ?? 0;
-$pengeluaran_servis = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran WHERE KETERANGAN LIKE '%servis%' OR KETERANGAN LIKE '%aset%'"))['t'] ?? 0;
+$pengeluaran_servis = mysqli_fetch_assoc(mysqli_query($koneksi, 
+    "SELECT SUM(JUMLAH_PENGELUARAN) as t FROM pengeluaran 
+     WHERE JENIS_PENGELUARAN LIKE '%servis%' OR JENIS_PENGELUARAN LIKE '%aset%'"))['t'] ?? 0;
 $total_pengeluaran  = $biaya_gaji + $biaya_bahan + $biaya_lain + $pengeluaran_servis;
 $laba_bersih        = $omset - $total_pengeluaran;
 $hutang_bahan = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_bahan WHERE STATUS_BAYAR='Belum Dibayar'"))['t'] ?? 0;
