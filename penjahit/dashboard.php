@@ -317,8 +317,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
             <b><?= $jumlah_notif ?> gaji baru</b> sudah dikirim oleh owner! Cek tabel di bawah dan klik
             <b>Konfirmasi Terima</b> untuk menyelesaikan.
         </div>
-        <a href="#tabel-produksi" class="ab-btn">Lihat Sekarang <i class="bi bi-arrow-down"></i></a>
-    </div>
+        <button onclick="document.getElementById('tabel-produksi').scrollIntoView({behavior:'smooth'})" class="ab-btn">Lihat Sekarang <i class="bi bi-arrow-down"></i></button>    </div>
     <?php endif; ?>
 
     <!-- STAT CARDS -->
