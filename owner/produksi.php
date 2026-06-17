@@ -385,7 +385,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <!-- ══ TOPBAR ══ -->
 <header class="topbar">
     <div class="tb-greeting">
-        <div class="tb-hello">🏭 Manajemen Produksi</div>
+        <div class="tb-hello">🏭 Produksi Aktif</div>
         <div class="tb-sub"><?=date('l, d F Y')?></div>
     </div>
     <div class="tb-actions">
