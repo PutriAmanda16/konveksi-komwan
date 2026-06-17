@@ -222,6 +222,12 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 
 @media(max-width:900px){.sidebar{transform:translateX(-100%)}.topbar{left:0}.main{margin-left:0}}
 @media(max-width:768px){.produk-grid{grid-template-columns:repeat(2,1fr)}}
+/* Ukuran row */
+.ukuran-row{display:flex;align-items:center;gap:10px;background:var(--p50);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px}
+.ukuran-label{font-size:13px;font-weight:700;color:var(--text);min-width:60px}
+.ukuran-qty{width:80px;padding:6px 10px;border:1.5px solid var(--border2);border-radius:8px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;text-align:center;color:var(--text);background:var(--white);outline:none}
+.ukuran-qty:focus{border-color:var(--p400);box-shadow:0 0 0 3px rgba(232,50,138,0.1)}
+.ukuran-note{font-size:11px;color:var(--text3);flex:1}
 </style>
 </head>
 <body>
@@ -383,10 +389,14 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                             <span>Silakan klik salah satu kartu produk di atas terlebih dahulu.</span>
                         </div>
 
-                        <div style="margin-bottom:14px">
-                            <label class="form-lbl"><i class="bi bi-hash"></i> Jumlah (Pcs)</label>
-                            <input type="number" name="jumlah" id="input_jumlah" class="form-ctrl"
-                                   min="1" value="1" required oninput="hitungTotal()" placeholder="Masukkan jumlah...">
+                        <div style="margin-bottom:14px" id="ukuranSection">
+                            <label class="form-lbl"><i class="bi bi-rulers"></i> Ukuran & Jumlah</label>
+                            <div id="ukuranContainer" style="display:flex;flex-direction:column;gap:8px"></div>
+                            <input type="hidden" name="ukuran_data" id="input_ukuran_data">
+                            <input type="hidden" name="jumlah" id="input_jumlah" value="1">
+                            <div style="margin-top:10px;font-size:12px;color:var(--text3)">
+                                <i class="bi bi-info-circle"></i> Isi jumlah 0 untuk ukuran yang tidak dipesan
+                            </div>
                         </div>
 
                         <div style="margin-bottom:4px">
@@ -398,8 +408,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         <!-- Summary -->
                         <div class="summary-box" id="summaryBox" style="display:<?= $selected_id ? 'block' : 'none' ?>">
                             <div class="sum-row"><span class="sum-lbl">Harga Satuan</span><span class="sum-val" id="sum_satuan">Rp 0</span></div>
-                            <div class="sum-row"><span class="sum-lbl">Jumlah</span><span class="sum-val" id="sum_jumlah">1 pcs</span></div>
-                            <div class="sum-row sum-total" style="padding-top:8px;margin-top:4px">
+                            <div class="sum-row"><span class="sum-lbl">Jumlah</span><span class="sum-val" id="sum_jumlah">0 pcs</span></div>
+                            <div id="sum_ukuran_detail" style="padding:4px 0;font-size:12px;color:var(--text3)"></div>                            <div class="sum-row sum-total" style="padding-top:8px;margin-top:4px">
                                 <span class="sum-lbl">Total Estimasi</span>
                                 <span class="sum-val" id="sum_total">Rp 0</span>
                             </div>
@@ -474,6 +484,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 <script>
 const produkData = <?= json_encode(array_column($produk_list, null, 'ID_PRODUK')) ?>;
 let hargaSatuan = 0;
+let ukuranList  = [];
 
 <?php if ($selected_id): foreach ($produk_list as $prd): if ($prd['ID_PRODUK'] == $selected_id): ?>
 window.addEventListener('DOMContentLoaded', () => {
@@ -485,8 +496,11 @@ function pilihProduk(id, nama, harga, bahan, ukuran) {
     document.querySelectorAll('.produk-card').forEach(c => c.classList.remove('selected'));
     const card = document.querySelector(`.produk-card[data-id="${id}"]`);
     if (card) card.classList.add('selected');
+
     document.getElementById('input_id_produk').value = id;
     hargaSatuan = harga;
+    ukuranList  = ukuran.split(',').map(u => u.trim()).filter(u => u);
+
     document.getElementById('disp_nama').textContent   = nama;
     document.getElementById('disp_bahan').textContent  = bahan;
     document.getElementById('disp_harga').textContent  = 'Rp ' + harga.toLocaleString('id-ID');
@@ -494,21 +508,61 @@ function pilihProduk(id, nama, harga, bahan, ukuran) {
     document.getElementById('selectedInfo').style.display    = 'block';
     document.getElementById('noSelectWarning').style.display = 'none';
     document.getElementById('summaryBox').style.display      = 'block';
+
+    renderUkuranRows();
+}
+
+function renderUkuranRows() {
+    const container = document.getElementById('ukuranContainer');
+    container.innerHTML = '';
+    ukuranList.forEach(uk => {
+        const row = document.createElement('div');
+        row.className = 'ukuran-row';
+        row.innerHTML = `
+            <span class="ukuran-label">${uk}</span>
+            <input type="number" class="ukuran-qty" min="0" value="0"
+                   data-ukuran="${uk}" oninput="hitungTotal()" placeholder="0">
+            <span class="ukuran-note">pcs</span>
+        `;
+        container.appendChild(row);
+    });
     hitungTotal();
 }
 
 function hitungTotal() {
-    const jumlah = parseInt(document.getElementById('input_jumlah').value) || 1;
-    const total  = hargaSatuan * jumlah;
-    document.getElementById('sum_satuan').textContent = 'Rp ' + hargaSatuan.toLocaleString('id-ID');
-    document.getElementById('sum_jumlah').textContent = jumlah + ' pcs';
-    document.getElementById('sum_total').textContent  = 'Rp ' + total.toLocaleString('id-ID');
+    const inputs  = document.querySelectorAll('.ukuran-qty');
+    let totalQty  = 0;
+    let detail    = [];
+    const ukuranData = {};
+
+    inputs.forEach(inp => {
+        const qty = parseInt(inp.value) || 0;
+        const uk  = inp.dataset.ukuran;
+        ukuranData[uk] = qty;
+        if (qty > 0) {
+            totalQty += qty;
+            detail.push(`${uk}: ${qty} pcs`);
+        }
+    });
+
+    document.getElementById('input_jumlah').value          = totalQty;
+    document.getElementById('input_ukuran_data').value     = JSON.stringify(ukuranData);
+    document.getElementById('sum_satuan').textContent      = 'Rp ' + hargaSatuan.toLocaleString('id-ID');
+    document.getElementById('sum_jumlah').textContent      = totalQty + ' pcs';
+    document.getElementById('sum_ukuran_detail').textContent = detail.length ? '📏 ' + detail.join('  •  ') : '';
+    document.getElementById('sum_total').textContent       = 'Rp ' + (hargaSatuan * totalQty).toLocaleString('id-ID');
 }
 
 document.getElementById('formPesan').addEventListener('submit', function(e) {
     if (!document.getElementById('input_id_produk').value) {
         e.preventDefault();
         alert('⚠️ Silakan pilih produk terlebih dahulu!');
+        return;
+    }
+    const jumlah = parseInt(document.getElementById('input_jumlah').value) || 0;
+    if (jumlah === 0) {
+        e.preventDefault();
+        alert('⚠️ Masukkan jumlah minimal 1 pcs untuk setidaknya satu ukuran!');
     }
 });
 </script>
