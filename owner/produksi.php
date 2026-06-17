@@ -378,7 +378,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
         </a>
     </nav>
     <div class="sb-footer">
-        <a href="../logout.php" class="nav-item logout"><i class="bi bi-box-arrow-left"></i> Logout</a>
+        <a href="../auth/logout.php" class="nav-item logout"><i class="bi bi-box-arrow-left"></i> Logout</a>
     </div>
 </aside>
 
