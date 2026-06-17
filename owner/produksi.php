@@ -362,13 +362,13 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
         <a href="penggajian.php" class="nav-item"><i class="bi bi-cash-stack"></i> Penggajian</a>
         <div class="nav-group-label">Manajemen</div>
         <a href="kelola_produk.php"   class="nav-item"><i class="bi bi-box-seam"></i> Produk</a>
-        <a href="kelola_penjahit.php" class="nav-item"><i class="bi bi-people"></i> Penjahit</a>
-        <a href="bahan_baku.php"      class="nav-item"><i class="bi bi-archive"></i> Bahan Baku
+        <a href="data_penjahit.php" class="nav-item"><i class="bi bi-people"></i> Penjahit</a>
+        <a href="kelola_bahan.php"      class="nav-item"><i class="bi bi-archive"></i> Bahan Baku
             <?php if($stok_kritis > 0): ?>
             <span class="nav-pill pill-orange"><?=$stok_kritis?></span>
             <?php endif; ?>
         </a>
-        <a href="aset.php" class="nav-item"><i class="bi bi-tools"></i> Aset</a>
+        <a href="kelola_aset.php" class="nav-item"><i class="bi bi-tools"></i> Aset</a>
         <div class="nav-group-label">Laporan</div>
         <a href="laporan.php" class="nav-item"><i class="bi bi-bar-chart-line"></i> Laporan</a>
         <a href="chat.php"    class="nav-item"><i class="bi bi-chat-dots"></i> Chat
