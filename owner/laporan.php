@@ -102,7 +102,15 @@ $hutang = db_fetch_one($koneksi, "SELECT SUM(TOTAL_BIAYA) as t FROM pembelian_ba
 $total_pengeluaran = $biaya_gaji + $biaya_bahan + $biaya_lain + $biaya_servis;
 $laba_bersih       = $omset - $total_pengeluaran;
 $margin_pct        = $omset > 0 ? round(($laba_bersih / $omset) * 100, 1) : 0;
+// DEBUG SEMENTARA - hapus setelah fix
+$cols_gaji = db_fetch_all($koneksi, "SHOW COLUMNS FROM penggajian");
+$cols_penjahit = db_fetch_all($koneksi, "SHOW COLUMNS FROM penjahit");
+echo "<pre>";
+print_r($cols_gaji);
+print_r($cols_penjahit);
+echo "</pre>";
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
