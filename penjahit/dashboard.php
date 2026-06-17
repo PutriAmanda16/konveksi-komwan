@@ -58,7 +58,8 @@ if (isset($_POST['komplain'])) {
 
     $cek = mysqli_query($koneksi, "SELECT ID_PRODUKSI FROM penggajian WHERE ID_PRODUKSI = '$id_komplain'");
     if (mysqli_num_rows($cek) == 0) {
-        mysqli_query($koneksi, "INSERT INTO penggajian (ID_PRODUKSI, STATUS_TERIMA, CATATAN_KOMPLAIN, BUKTI_KOMPLAIN, TANGGAL_KOMPLAIN, STATUS_KOMPLAIN) VALUES ('$id_komplain', 'Belum', '$catatan', '$nama_bukti_komplain', '$waktu_komplain', 'Menunggu')");
+        $id_gaji_baru = 'GAJ-' . time() . rand(10,99);
+        mysqli_query($koneksi, "INSERT INTO penggajian (ID_GAJI, ID_PRODUKSI, STATUS_TERIMA, CATATAN_KOMPLAIN, BUKTI_KOMPLAIN, TANGGAL_KOMPLAIN, STATUS_KOMPLAIN) VALUES ('$id_gaji_baru', '$id_komplain', 'Belum', '$catatan', '$nama_bukti_komplain', '$waktu_komplain', 'Menunggu')");
     } else {
         $set_bukti = $nama_bukti_komplain ? ", BUKTI_KOMPLAIN = '$nama_bukti_komplain'" : "";
         mysqli_query($koneksi, "UPDATE penggajian SET CATATAN_KOMPLAIN='$catatan', TANGGAL_KOMPLAIN='$waktu_komplain', STATUS_KOMPLAIN='Menunggu' $set_bukti WHERE ID_PRODUKSI='$id_komplain'");
