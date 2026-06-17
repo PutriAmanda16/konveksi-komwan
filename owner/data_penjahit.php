@@ -34,11 +34,11 @@ if (isset($_POST['edit_upah'])) {
 if (isset($_POST['tambah_penjahit'])) {
     $nama = mysqli_real_escape_string($koneksi, $_POST['nama_penjahit']);
     $upah = intval($_POST['upah_penjahit']);
+    $keahlian = mysqli_real_escape_string($koneksi, $_POST['keahlian_penjahit'] ?? '');
     $last = mysqli_fetch_assoc(mysqli_query($koneksi, "SELECT ID_PENJAHIT FROM penjahit ORDER BY ID_PENJAHIT DESC LIMIT 1"));
     $num  = $last ? (int)substr($last['ID_PENJAHIT'], 3) + 1 : 1;
     $id   = 'PJT' . str_pad($num, 2, '0', STR_PAD_LEFT);
-    mysqli_query($koneksi, "INSERT INTO penjahit (ID_PENJAHIT, NAMA_PENJAHIT, UPAH_PER_UNIT) VALUES ('$id', '$nama', $upah)");
-    header("Location: data_penjahit.php?sukses=2");
+    mysqli_query($koneksi, "INSERT INTO penjahit (ID_PENJAHIT, NAMA_PENJAHIT, UPAH_PER_UNIT, KEAHLIAN) VALUES ('$id', '$nama', $upah, '$keahlian')");    header("Location: data_penjahit.php?sukses=2");
     exit;
 }
 
