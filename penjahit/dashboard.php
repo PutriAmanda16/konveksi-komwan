@@ -76,7 +76,9 @@ if (isset($_POST['komplain'])) {
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-/* ── DEADLINE BADGE ── */
+
+<style>
+    /* ── DEADLINE BADGE ── */
 .dl-aman   { background:var(--g100);  color:var(--g700);  border:1px solid rgba(34,197,94,0.25); }
 .dl-mepet  { background:var(--a100);  color:var(--a700);  border:1px solid rgba(234,179,8,0.25); }
 .dl-lewat  { background:var(--r100);  color:var(--r700);  border:1px solid rgba(239,68,68,0.25); }
@@ -87,7 +89,6 @@ if (isset($_POST['komplain'])) {
     font-size:12px; font-weight:700; white-space:nowrap;
 }
 
-<style>
 :root {
     --p50:#fff0f5; --p100:#ffd6e7; --p200:#ffadd0; --p300:#ff80b8;
     --p400:#f950a0; --p500:#e8328a; --p600:#cc1a73; --p700:#a8105d;
@@ -384,7 +385,9 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
             $query = mysqli_query($koneksi, "
                 SELECT p.*, pr.NAMA_PRODUK,
                     p.DEADLINE, p.STATUS_KUALITAS,
-                    g.BUKTI_BAYAR, g.STATUS_TERIMA, g.TANGGAL_BAYAR, g.TANGGAL_KONFIRMASI,
+                    IF(g.BUKTI_BAYAR IS NOT NULL AND g.BUKTI_BAYAR != '', 1, 0) as ADA_BUKTI,
+                    LEFT(g.BUKTI_BAYAR, 100) as BUKTI_BAYAR_PREVIEW,
+                    g.STATUS_TERIMA, g.TANGGAL_BAYAR, g.TANGGAL_KONFIRMASI,
                     g.CATATAN_KOMPLAIN, g.TANGGAL_KOMPLAIN, g.STATUS_KOMPLAIN
                 FROM produksi p
                 JOIN produk pr ON p.ID_PRODUK = pr.ID_PRODUK
@@ -396,7 +399,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                 $upah_tugas    = $row['JUMLAH_DIPRODUKSI'] * $upah_satuan;
                 $st_pengerjaan = $row['STATUS_PRODUKSI'] ?? 'Pending';
                 $status_terima = $row['STATUS_TERIMA'] ?? '';
-                $ada_bukti     = !empty($row['BUKTI_BAYAR']);
+                $ada_bukti = (bool)($row['ADA_BUKTI'] ?? 0);
                 $tgl_bayar     = $row['TANGGAL_BAYAR'] ? date('d M Y', strtotime($row['TANGGAL_BAYAR'])) : '-';
                 $tgl_konfirm   = $row['TANGGAL_KONFIRMASI'] ? date('d M Y, H:i', strtotime($row['TANGGAL_KONFIRMASI'])) : null;
                 // Hitung sisa hari deadline
@@ -484,8 +487,7 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
                         </button>
 
                         <?php if($ada_bukti && $status_terima != 'Diterima'): ?>
-                        <a href="../assets/bukti_gaji/<?= $row['BUKTI_BAYAR'] ?>" target="_blank" class="btn-aksi btn-nota">
-                            <i class="bi bi-file-image"></i> Nota
+                        <a href="lihat_bukti_gaji.php?id=<?= $row['ID_PRODUKSI'] ?>" target="_blank" class="btn-aksi btn-nota">                            <i class="bi bi-file-image"></i> Nota
                         </a>
                         <a href="konfirmasi_gaji.php?id=<?= $row['ID_PRODUKSI'] ?>" class="btn-aksi btn-konfirm"
                            onclick="return confirm('Pastikan gaji sudah kamu terima ya!')">
