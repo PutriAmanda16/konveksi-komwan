@@ -1,6 +1,12 @@
 <?php
+ob_start();
 session_start();
 include "../config/koneksi.php";
+
+if (!isset($_SESSION['id']) || $_SESSION['role'] != 'pelanggan') {
+    header("Location: ../index.php");
+    exit;
+}
 
 $id_pelanggan = $_SESSION['id'];
 $id_produk    = $_POST['id_produk'];
