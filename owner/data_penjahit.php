@@ -438,6 +438,10 @@ body::before { content:''; position:fixed; inset:0; background-image:radial-grad
                 <label class="form-label-custom">Upah per Unit (Rp)</label>
                 <input type="number" name="upah_penjahit" class="form-input-custom" placeholder="Contoh: 5000" min="0" required>
             </div>
+            <div class="form-group">
+                <label class="form-label-custom">Keahlian</label>
+                <input type="text" name="keahlian_penjahit" class="form-input-custom" placeholder="cth: Jahit baju, bordir, obras...">
+            </div>
             <div class="modal-actions">
                 <button type="button" class="btn-modal-cancel" onclick="tutupModal('modalTambah')">Batal</button>
                 <button type="submit" class="btn-modal-save"><i class="bi bi-plus-lg"></i> Tambah Penjahit</button>
