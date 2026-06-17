@@ -76,6 +76,7 @@ if (isset($_POST['komplain'])) {
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
+<style>
 /* ── DEADLINE BADGE ── */
 .dl-aman   { background:var(--g100);  color:var(--g700);  border:1px solid rgba(34,197,94,0.25); }
 .dl-mepet  { background:var(--a100);  color:var(--a700);  border:1px solid rgba(234,179,8,0.25); }
@@ -86,6 +87,7 @@ if (isset($_POST['komplain'])) {
     padding:4px 10px; border-radius:99px;
     font-size:12px; font-weight:700; white-space:nowrap;
 }
+</style>
 
 <style>
 :root {
