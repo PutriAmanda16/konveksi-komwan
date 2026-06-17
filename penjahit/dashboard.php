@@ -298,10 +298,10 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
     </div>
     <div class="tb-actions">
         <?php if($jumlah_notif > 0): ?>
-        <div class="icon-btn">
+        <a href="#tabel-produksi" class="icon-btn">
             <i class="bi bi-bell-fill"></i>
             <span class="dot"></span>
-        </div>
+        </a>
         <?php endif; ?>
         <div class="date-pill"><i class="bi bi-calendar-heart"></i> <?= date('d M Y') ?></div>
     </div>
